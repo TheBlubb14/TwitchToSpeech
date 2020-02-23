@@ -85,13 +85,13 @@ namespace TwitchToSpeech.ViewModel
             {
                 if (string.IsNullOrWhiteSpace(Settings.Instance.Username))
                 {
-                    ShowMessage("Twitch Benutzername ist in den Einstellungen nicht gesetzt");
+                    ShowMessage("Twitch Benutzername ist in den Einstellungen nicht gesetzt", new NotificationSetting(false, true));
                     return;
                 }
 
                 if (string.IsNullOrWhiteSpace(Settings.Instance.OAuthToken))
                 {
-                    ShowMessage("Twitch O Auth Token ist in den Einstellungen nicht gesetzt");
+                    ShowMessage("Twitch O Auth Token ist in den Einstellungen nicht gesetzt", new NotificationSetting(false, true));
                     return;
                 }
 
@@ -124,64 +124,46 @@ namespace TwitchToSpeech.ViewModel
 
         private void TwitchClient_OnMessageReceived(object sender, OnMessageReceivedArgs e)
         {
-            if (!Settings.Instance.MessageNotification)
-                return;
-
             if (e.ChatMessage.IsMe)
                 return;
 
             if (Settings.Instance.PrefixList?.Any(x => e.ChatMessage.Message.StartsWith(x, StringComparison.OrdinalIgnoreCase)) ?? false)
                 return;
 
-            ShowMessage($"{e.ChatMessage.Username}: {e.ChatMessage.Message}");
+            ShowMessage($"{e.ChatMessage.Username}: {e.ChatMessage.Message}", Settings.Instance.MessageNotification);
         }
 
         private void TwitchClient_OnBeingHosted(object sender, OnBeingHostedArgs e)
         {
-            if (!Settings.Instance.BeingHostedNotification)
-                return;
-
             if (e.BeingHostedNotification.IsAutoHosted)
                 return;
 
-            ShowMessage($"{e.BeingHostedNotification.HostedByChannel} hosted mit {e.BeingHostedNotification.Viewers} Leuten");
+            ShowMessage($"{e.BeingHostedNotification.HostedByChannel} hosted mit {e.BeingHostedNotification.Viewers} Leuten", Settings.Instance.BeingHostedNotification);
         }
 
         private void TwitchClient_OnUserLeft(object sender, OnUserLeftArgs e)
         {
-            if (!Settings.Instance.UserLeftNotification)
-                return;
-
-            ShowMessage($"{e.Username} ist weg");
+            ShowMessage($"{e.Username} ist weg", Settings.Instance.UserLeftNotification);
         }
 
         private void TwitchClient_OnUserJoined(object sender, OnUserJoinedArgs e)
-        {
-            if (!Settings.Instance.UserJoinedNotification)
-                return;
-
-            ShowMessage($"{e.Username} ist da");
+        { 
+            ShowMessage($"{e.Username} ist da", Settings.Instance.UserJoinedNotification);
         }
 
         private void TwitchClient_OnRaidNotification(object sender, OnRaidNotificationArgs e)
         {
-            if (!Settings.Instance.RaidNotification)
-                return;
-
-            ShowMessage($"{e.RaidNotification.DisplayName} raidet mit {e.RaidNotification.MsgParamViewerCount} Leuten");
+            ShowMessage($"{e.RaidNotification.DisplayName} raidet mit {e.RaidNotification.MsgParamViewerCount} Leuten", Settings.Instance.RaidNotification);
         }
 
         private void TwitchClient_OnNewSubscriber(object sender, OnNewSubscriberArgs e)
         {
-            if (!Settings.Instance.SubscriberNotification)
-                return;
-
-            ShowMessage($"{e.Subscriber.DisplayName} hat abonniert");
+            ShowMessage($"{e.Subscriber.DisplayName} hat abonniert", Settings.Instance.SubscriberNotification);
         }
 
         private void TwitchClient_OnConnected(object sender, OnConnectedArgs e)
         {
-            ShowMessage("Kleint verbunden");
+            ShowMessage("Kleint verbunden", Settings.Instance.ClientConnectedNotification);
         }
 
         private void KeyDown(KeyEventArgs e)
@@ -194,10 +176,12 @@ namespace TwitchToSpeech.ViewModel
 
         private bool IsControl => (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
 
-        private void ShowMessage(string text)
+        private void ShowMessage(string text, NotificationSetting userLeftNotification)
         {
-            Log.Information(text);
-            Speak(text);
+            if (userLeftNotification.Text)
+                Log.Information(text);
+            if (userLeftNotification.Speech)
+                Speak(text);
         }
 
         private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)

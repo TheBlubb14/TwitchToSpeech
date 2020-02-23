@@ -36,6 +36,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <!--Content-->
 
@@ -48,18 +49,31 @@
                     </StackPanel>
                 </Expander>
 
-                <Expander HorizontalAlignment="Stretch" Header="Notifications" Grid.Column="0" Grid.Row="1">
+                <Expander HorizontalAlignment="Stretch" Header="Notifications Speech" Grid.Column="0" Grid.Row="1">
                     <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
-                        <CheckBox Content="Subscriber Notification" IsChecked="{Binding Settings.SubscriberNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
-                        <CheckBox Content="Raid Notification" IsChecked="{Binding Settings.RaidNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
-                        <CheckBox Content="User Joined Notification" IsChecked="{Binding Settings.UserJoinedNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
-                        <CheckBox Content="User Left Notification" IsChecked="{Binding Settings.UserLeftNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
-                        <CheckBox Content="Being Hosted Notification" IsChecked="{Binding Settings.BeingHostedNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
-                        <CheckBox Content="Message Notification" IsChecked="{Binding Settings.MessageNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Subscriber Notification" IsChecked="{Binding Settings.SubscriberNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Raid Notification" IsChecked="{Binding Settings.RaidNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="User Joined Notification" IsChecked="{Binding Settings.UserJoinedNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="User Left Notification" IsChecked="{Binding Settings.UserLeftNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Being Hosted Notification" IsChecked="{Binding Settings.BeingHostedNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Message Notification" IsChecked="{Binding Settings.MessageNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Connected Notification" IsChecked="{Binding Settings.ClientConnectedNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                     </StackPanel>
                 </Expander>
-
-                <Expander HorizontalAlignment="Stretch" Header="Filter" Grid.Column="0" Grid.Row="2">
+                
+                <Expander HorizontalAlignment="Stretch" Header="Notifications Text" Grid.Column="0" Grid.Row="2">
+                    <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
+                        <CheckBox Content="Subscriber Notification" IsChecked="{Binding Settings.SubscriberNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Raid Notification" IsChecked="{Binding Settings.RaidNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="User Joined Notification" IsChecked="{Binding Settings.UserJoinedNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="User Left Notification" IsChecked="{Binding Settings.UserLeftNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Being Hosted Notification" IsChecked="{Binding Settings.BeingHostedNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Message Notification" IsChecked="{Binding Settings.MessageNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Connected Notification" IsChecked="{Binding Settings.ClientConnectedNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                    </StackPanel>
+                </Expander>
+                
+                <Expander HorizontalAlignment="Stretch" Header="Filter" Grid.Column="0" Grid.Row="3">
                     <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
                         <TextBox TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Settings.PrefixListText, Mode=TwoWay}"  Margin="0 0 0 8" wpf:HintAssist.Hint="Ignore messages with the following prefixes" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
                     </StackPanel>

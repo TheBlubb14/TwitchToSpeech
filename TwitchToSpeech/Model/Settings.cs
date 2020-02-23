@@ -57,16 +57,35 @@ namespace TwitchToSpeech.Model
 
         public string PrefixListText { get; set; }
 
-        public bool SubscriberNotification { get; set; }
+        public NotificationSetting SubscriberNotification { get; set; }
 
-        public bool RaidNotification { get; set; }
+        public NotificationSetting RaidNotification { get; set; }
 
-        public bool UserJoinedNotification { get; set; }
+        public NotificationSetting UserJoinedNotification { get; set; }
 
-        public bool UserLeftNotification { get; set; }
+        public NotificationSetting UserLeftNotification { get; set; }
 
-        public bool BeingHostedNotification { get; set; }
+        public NotificationSetting BeingHostedNotification { get; set; }
 
-        public bool MessageNotification { get; set; }
+        public NotificationSetting MessageNotification { get; set; }
+
+        public NotificationSetting ClientConnectedNotification { get; set; }
+    }
+
+    public class NotificationSetting
+    {
+        public bool Speech { get; set; }
+        public bool Text { get; set; }
+
+        public NotificationSetting()
+        {
+
+        }
+
+        public NotificationSetting(bool speech, bool text)
+        {
+            this.Speech = speech;
+            this.Text = text;
+        }
     }
 }
