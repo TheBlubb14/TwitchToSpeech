@@ -16,8 +16,8 @@
              TextOptions.TextRenderingMode="Auto"        
              Background="{DynamicResource MaterialDesignPaper}"
              FontFamily="{DynamicResource MaterialDesignFont}"
-             Height="350" Width="525"
              DataContext="{Binding Settings, Source={ StaticResource Locator}}">
+             <!--Height="350" Width="525" SizeToContent="Height"-->
 
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
@@ -35,14 +35,28 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <!--Content-->
-                <TextBox Text="{Binding Settings.Username, Mode=TwoWay}" Grid.Column="0" Grid.Row="0" Margin="0 0 0 8" wpf:HintAssist.Hint="Twitch Username" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
-                <TextBox Text="{Binding Settings.OAuthToken, Mode=TwoWay}" Grid.Column="0" Grid.Row="1" Margin="0 0 0 8" wpf:HintAssist.Hint="Twitch OAuth Token https://twitchapps.com/tmi/" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
-                <Button Content="Öffne OAuth Website" Command="{Binding OpenOAuthWebsiteCommand}" Grid.Column="0" Grid.Row="2" Margin="0 0 0 8" />
-                <TextBox Text="{Binding Settings.ChannelToJoin, Mode=TwoWay}" Grid.Column="0" Grid.Row="3" Margin="0 0 0 8" wpf:HintAssist.Hint="Channel to join" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+
+                <Expander HorizontalAlignment="Stretch" Header="Twitch" Grid.Column="0" Grid.Row="0">
+                    <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
+                        <TextBox Text="{Binding Settings.Username, Mode=TwoWay}" Margin="0 0 0 8" wpf:HintAssist.Hint="Twitch Username" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                        <TextBox Text="{Binding Settings.OAuthToken, Mode=TwoWay}" Margin="0 0 0 8" wpf:HintAssist.Hint="Twitch OAuth Token" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                        <Button Content="Öffne OAuth Website" Command="{Binding OpenOAuthWebsiteCommand}" Margin="0 0 0 8" />
+                        <TextBox Text="{Binding Settings.ChannelToJoin, Mode=TwoWay}" Margin="0 0 0 8" wpf:HintAssist.Hint="Channel to join" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                    </StackPanel>
+                </Expander>
+
+                <Expander HorizontalAlignment="Stretch" Header="Notifications" Grid.Column="0" Grid.Row="1">
+                    <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
+                        <CheckBox Content="Subscriber Notification" IsChecked="{Binding Settings.SubscriberNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Raid Notification" IsChecked="{Binding Settings.RaidNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="User Joined Notification" IsChecked="{Binding Settings.UserJoinedNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="User Left Notification" IsChecked="{Binding Settings.UserLeftNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Being Hosted Notification" IsChecked="{Binding Settings.BeingHostedNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Message Notification" IsChecked="{Binding Settings.MessageNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                    </StackPanel>
+                </Expander>
             </Grid>
 
             <StackPanel DockPanel.Dock="Bottom" Margin="8" HorizontalAlignment="Center" VerticalAlignment="Bottom" Orientation="Horizontal">

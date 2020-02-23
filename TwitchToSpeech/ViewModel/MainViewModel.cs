@@ -129,6 +129,9 @@ namespace TwitchToSpeech.ViewModel
 
         private void TwitchClient_OnMessageReceived(object sender, OnMessageReceivedArgs e)
         {
+            if (!Settings.Instance.MessageNotification)
+                return;
+
             if (e.ChatMessage.IsMe)
                 return;
 
@@ -140,6 +143,9 @@ namespace TwitchToSpeech.ViewModel
 
         private void TwitchClient_OnBeingHosted(object sender, OnBeingHostedArgs e)
         {
+            if (!Settings.Instance.BeingHostedNotification)
+                return;
+
             if (e.BeingHostedNotification.IsAutoHosted)
                 return;
 
@@ -148,21 +154,33 @@ namespace TwitchToSpeech.ViewModel
 
         private void TwitchClient_OnUserLeft(object sender, OnUserLeftArgs e)
         {
+            if (!Settings.Instance.UserLeftNotification)
+                return;
+
             ShowMessage($"{e.Username} ist weg");
         }
 
         private void TwitchClient_OnUserJoined(object sender, OnUserJoinedArgs e)
         {
+            if (!Settings.Instance.UserJoinedNotification)
+                return;
+
             ShowMessage($"{e.Username} ist da");
         }
 
         private void TwitchClient_OnRaidNotification(object sender, OnRaidNotificationArgs e)
         {
+            if (!Settings.Instance.RaidNotification)
+                return;
+
             ShowMessage($"{e.RaidNotification.DisplayName} raidet mit {e.RaidNotification.MsgParamViewerCount} Leuten");
         }
 
         private void TwitchClient_OnNewSubscriber(object sender, OnNewSubscriberArgs e)
         {
+            if (!Settings.Instance.SubscriberNotification)
+                return;
+
             ShowMessage($"{e.Subscriber.DisplayName} hat abonniert");
         }
 

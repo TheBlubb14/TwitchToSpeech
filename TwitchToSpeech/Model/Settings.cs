@@ -41,5 +41,17 @@ namespace TwitchToSpeech.Model
         public string ChannelToJoin { get; set; }
 
         public string[] PrefixList { get; set; }
+
+        public bool SubscriberNotification { get; set; }
+
+        public bool RaidNotification { get; set; }
+
+        public bool UserJoinedNotification { get; set; }
+
+        public bool UserLeftNotification { get; set; }
+
+        public bool BeingHostedNotification { get; set; }
+
+        public bool MessageNotification { get; set; }
     }
 }
