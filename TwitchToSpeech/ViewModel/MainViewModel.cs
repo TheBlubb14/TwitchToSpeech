@@ -31,8 +31,6 @@ namespace TwitchToSpeech.ViewModel
         public ISnackbarMessageQueue SnackbarMessageQueue { get; set; }
         public bool IsTwitchConnected { get; set; }
         public ICommand ConnectToTwitchCommand { get; set; }
-        public string PrefixList { get; set; }
-        public ICommand SavePrefixListCommand { get; set; }
         public ICommand KeyDownCommand { get; set; }
 
         public ObservableCollection<string> Logs { get; set; } = new ObservableCollection<string>();
@@ -42,7 +40,6 @@ namespace TwitchToSpeech.ViewModel
         private SpeechSynthesizer speech;
         private TwitchAPI twitchAPI;
         private TwitchClient twitchClient;
-        private string[] prefixList;
 
         public MainViewModel()
         {
@@ -64,7 +61,6 @@ namespace TwitchToSpeech.ViewModel
                 MenuItemSettingsCommand = new RelayCommand(OpenSettings);
                 MenuItemExitCommand = new RelayCommand(Application.Current.Shutdown);
                 ConnectToTwitchCommand = new RelayCommand(ConnectToTwitch);
-                SavePrefixListCommand = new RelayCommand(SavePrefixList);
 
                 speech = new SpeechSynthesizer();
                 // TODO: speech.SelectVoice();
@@ -75,8 +71,7 @@ namespace TwitchToSpeech.ViewModel
         {
             try
             {
-                prefixList = Settings.Instance.PrefixList ?? new string[0];
-                PrefixList = string.Join(Environment.NewLine, prefixList);
+
             }
             catch (Exception ex)
             {
@@ -135,7 +130,7 @@ namespace TwitchToSpeech.ViewModel
             if (e.ChatMessage.IsMe)
                 return;
 
-            if (prefixList?.Any(x => e.ChatMessage.Message.StartsWith(x, StringComparison.OrdinalIgnoreCase)) ?? false)
+            if (Settings.Instance.PrefixList?.Any(x => e.ChatMessage.Message.StartsWith(x, StringComparison.OrdinalIgnoreCase)) ?? false)
                 return;
 
             ShowMessage($"{e.ChatMessage.Username}: {e.ChatMessage.Message}");
@@ -212,9 +207,6 @@ namespace TwitchToSpeech.ViewModel
                 case nameof(SnackbarMessageQueue):
                     ShowStartupExceptions();
                     break;
-                case nameof(PrefixList):
-                    prefixList = PrefixList.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-                    break;
             }
         }
 
@@ -266,12 +258,6 @@ namespace TwitchToSpeech.ViewModel
                         }
                     })).ConfigureAwait(false);
             }
-        }
-
-        private void SavePrefixList()
-        {
-            Settings.Instance.PrefixList = prefixList;
-            Settings.Safe();
         }
     }
 }

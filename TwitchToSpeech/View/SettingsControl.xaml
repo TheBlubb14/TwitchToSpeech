@@ -17,7 +17,7 @@
              Background="{DynamicResource MaterialDesignPaper}"
              FontFamily="{DynamicResource MaterialDesignFont}"
              DataContext="{Binding Settings, Source={ StaticResource Locator}}">
-             <!--Height="350" Width="525" SizeToContent="Height"-->
+    <!--Height="350" Width="525" SizeToContent="Height"-->
 
     <i:Interaction.Triggers>
         <i:EventTrigger EventName="Loaded">
@@ -33,6 +33,7 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -55,6 +56,12 @@
                         <CheckBox Content="User Left Notification" IsChecked="{Binding Settings.UserLeftNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                         <CheckBox Content="Being Hosted Notification" IsChecked="{Binding Settings.BeingHostedNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                         <CheckBox Content="Message Notification" IsChecked="{Binding Settings.MessageNotification}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                    </StackPanel>
+                </Expander>
+
+                <Expander HorizontalAlignment="Stretch" Header="Filter" Grid.Column="0" Grid.Row="2">
+                    <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
+                        <TextBox TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Settings.PrefixListText, Mode=TwoWay}"  Margin="0 0 0 8" wpf:HintAssist.Hint="Ignore messages with the following prefixes" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
                     </StackPanel>
                 </Expander>
             </Grid>

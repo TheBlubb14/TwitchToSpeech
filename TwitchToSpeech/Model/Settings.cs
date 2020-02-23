@@ -1,6 +1,7 @@
 ﻿using GalaSoft.MvvmLight;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 
@@ -34,13 +35,27 @@ namespace TwitchToSpeech.Model
                 Instance = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(Location));
         }
 
+        public Settings()
+        {
+            this.PropertyChanged += Settings_PropertyChanged;
+        }
+
+        private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(PrefixListText))
+                PrefixList = PrefixListText.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+        }
+
+        [JsonIgnore]
+        public IReadOnlyCollection<string> PrefixList { get; set; }
+
         public string Username { get; set; }
 
         public string OAuthToken { get; set; }
 
         public string ChannelToJoin { get; set; }
 
-        public string[] PrefixList { get; set; }
+        public string PrefixListText { get; set; }
 
         public bool SubscriberNotification { get; set; }
 

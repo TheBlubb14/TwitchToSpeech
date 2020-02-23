@@ -22,6 +22,7 @@
 
     <Window.Resources>
         <ResourceDictionary>
+            <BooleanToVisibilityConverter x:Key="Bool2Vis"/>
             <materialDesign:BooleanToVisibilityConverter x:Key="Bool2VisInverted" TrueValue="Hidden" FalseValue="Visible"/>
         </ResourceDictionary>
     </Window.Resources>
@@ -95,25 +96,17 @@
                 <Grid Grid.Column="0" Grid.Row="0" Margin="20">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition/>
-                        <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
-                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Chatnachrichten mit folgenden Prefixen ignorieren" TextWrapping="Wrap"/>
-                    <TextBox Grid.Row="1" Grid.Column="0" TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding PrefixList, UpdateSourceTrigger=PropertyChanged}"/>
-                    <Button Grid.Row="1" Grid.Column="0" VerticalAlignment="Bottom" HorizontalAlignment="Right" 
-                            Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}" ToolTip="Speichere Liste"
-                            Command="{Binding SavePrefixListCommand}">
-                        <materialDesign:PackIcon Kind="ContentSave" Height="24" Width="24" />
-                    </Button>
-                    <Button Grid.Row="2" Grid.Column="0" Content="Connect to Twitch" Command="{Binding ConnectToTwitchCommand}" Visibility="{Binding IsTwitchConnected, Converter={StaticResource Bool2VisInverted}}"/>
+                    
+                    <Button Grid.Row="0" Grid.Column="0" Content="Connect to Twitch" Command="{Binding ConnectToTwitchCommand}" Visibility="{Binding IsTwitchConnected, Converter={StaticResource Bool2VisInverted}}"/>
 
-                    <ListBox Grid.Row="0" Grid.Column="1" Grid.RowSpan="99" ItemsSource="{Binding Logs}"
-                             ScrollViewer.VerticalScrollBarVisibility="Visible"
-                             ScrollViewer.HorizontalScrollBarVisibility="Visible">
+                    <ListBox Grid.Row="0" Grid.Column="0" Grid.RowSpan="99" ItemsSource="{Binding Logs}"
+                             Visibility="{Binding IsTwitchConnected, Converter={StaticResource Bool2Vis}}"
+                             ScrollViewer.VerticalScrollBarVisibility="Auto"
+                             ScrollViewer.HorizontalScrollBarVisibility="Auto">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding}"/>
