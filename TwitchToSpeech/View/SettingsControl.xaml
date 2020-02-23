@@ -36,11 +36,13 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <!--Content-->
                 <TextBox Text="{Binding Settings.Username, Mode=TwoWay}" Grid.Column="0" Grid.Row="0" Margin="0 0 0 8" wpf:HintAssist.Hint="Twitch Username" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
                 <TextBox Text="{Binding Settings.OAuthToken, Mode=TwoWay}" Grid.Column="0" Grid.Row="1" Margin="0 0 0 8" wpf:HintAssist.Hint="Twitch OAuth Token https://twitchapps.com/tmi/" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
-                <TextBox Text="{Binding Settings.ChannelToJoin, Mode=TwoWay}" Grid.Column="0" Grid.Row="2" Margin="0 0 0 8" wpf:HintAssist.Hint="Channel to join" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                <Button Content="Öffne OAuth Website" Command="{Binding OpenOAuthWebsiteCommand}" Grid.Column="0" Grid.Row="2" Margin="0 0 0 8" />
+                <TextBox Text="{Binding Settings.ChannelToJoin, Mode=TwoWay}" Grid.Column="0" Grid.Row="3" Margin="0 0 0 8" wpf:HintAssist.Hint="Channel to join" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
             </Grid>
 
             <StackPanel DockPanel.Dock="Bottom" Margin="8" HorizontalAlignment="Center" VerticalAlignment="Bottom" Orientation="Horizontal">

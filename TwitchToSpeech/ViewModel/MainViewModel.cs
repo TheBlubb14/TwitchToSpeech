@@ -43,7 +43,6 @@ namespace TwitchToSpeech.ViewModel
         private TwitchAPI twitchAPI;
         private TwitchClient twitchClient;
         private string[] prefixList;
-        private Serilog.ILogger twitchLogger;
 
         public MainViewModel()
         {
@@ -78,8 +77,6 @@ namespace TwitchToSpeech.ViewModel
             {
                 prefixList = Settings.Instance.PrefixList ?? new string[0];
                 PrefixList = string.Join(Environment.NewLine, prefixList);
-
-                Speak("Guten Tag");
             }
             catch (Exception ex)
             {
@@ -138,7 +135,7 @@ namespace TwitchToSpeech.ViewModel
             if (prefixList?.Any(x => e.ChatMessage.Message.StartsWith(x, StringComparison.OrdinalIgnoreCase)) ?? false)
                 return;
 
-            ShowMessage($"{e.ChatMessage.Username}. {e.ChatMessage.Message}");
+            ShowMessage($"{e.ChatMessage.Username}: {e.ChatMessage.Message}");
         }
 
         private void TwitchClient_OnBeingHosted(object sender, OnBeingHostedArgs e)
@@ -151,12 +148,12 @@ namespace TwitchToSpeech.ViewModel
 
         private void TwitchClient_OnUserLeft(object sender, OnUserLeftArgs e)
         {
-            ShowMessage($"{e.Username} ist gegangen");
+            ShowMessage($"{e.Username} ist weg");
         }
 
         private void TwitchClient_OnUserJoined(object sender, OnUserJoinedArgs e)
         {
-            ShowMessage($"{e.Username} ist gekommen");
+            ShowMessage($"{e.Username} ist da");
         }
 
         private void TwitchClient_OnRaidNotification(object sender, OnRaidNotificationArgs e)
@@ -171,7 +168,7 @@ namespace TwitchToSpeech.ViewModel
 
         private void TwitchClient_OnConnected(object sender, OnConnectedArgs e)
         {
-            ShowMessage("Client verbunden");
+            ShowMessage("Kleint verbunden");
         }
 
         private void KeyDown(KeyEventArgs e)
