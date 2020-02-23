@@ -9,6 +9,7 @@
         xmlns:Custom="http://www.galasoft.ch/mvvmlight"
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
         xmlns:local="clr-namespace:TwitchToSpeech"
+        xmlns:model="clr-namespace:TwitchToSpeech.Model"
         mc:Ignorable="d"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
@@ -102,7 +103,6 @@
                     </Grid.RowDefinitions>
                     
                     <Button Grid.Row="0" Grid.Column="0" Content="Connect to Twitch" Command="{Binding ConnectToTwitchCommand}" Visibility="{Binding IsTwitchConnected, Converter={StaticResource Bool2VisInverted}}"/>
-
                     <ListBox Grid.Row="0" Grid.Column="0" Grid.RowSpan="99" ItemsSource="{Binding Logs}"
                              Visibility="{Binding IsTwitchConnected, Converter={StaticResource Bool2Vis}}"
                              ScrollViewer.VerticalScrollBarVisibility="Auto"
