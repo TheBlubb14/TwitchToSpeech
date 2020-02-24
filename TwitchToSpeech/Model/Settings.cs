@@ -70,6 +70,10 @@ namespace TwitchToSpeech.Model
         public NotificationSetting MessageNotification { get; set; }
 
         public NotificationSetting ClientConnectedNotification { get; set; }
+
+        public bool ConnectToPipeServer { get; set; }
+
+        public string PipeServerName { get; set; }
     }
 
     public class NotificationSetting

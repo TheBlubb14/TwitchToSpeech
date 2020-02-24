@@ -32,6 +32,9 @@
         <i:EventTrigger EventName="Loaded">
             <Custom:EventToCommand Command="{Binding LoadedCommand}"/>
         </i:EventTrigger>
+        <i:EventTrigger EventName="Closed">
+            <Custom:EventToCommand Command="{Binding ClosedCommand}"/>
+        </i:EventTrigger>
         <i:EventTrigger EventName="KeyDown">
             <Custom:EventToCommand Command="{Binding KeyDownCommand}" PassEventArgsToCommand="True"/>
         </i:EventTrigger>

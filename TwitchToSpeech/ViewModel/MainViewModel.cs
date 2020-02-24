@@ -6,11 +6,16 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Data;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.IO.Pipes;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Speech.Synthesis;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
@@ -28,6 +33,7 @@ namespace TwitchToSpeech.ViewModel
         public ICommand MenuItemExitCommand { get; set; }
         public ICommand MenuItemSettingsCommand { get; set; }
         public ICommand LoadedCommand { get; set; }
+        public ICommand ClosedCommand { get; set; }
         public ISnackbarMessageQueue SnackbarMessageQueue { get; set; }
         public bool IsTwitchConnected { get; set; }
         public ICommand ConnectToTwitchCommand { get; set; }
@@ -40,6 +46,9 @@ namespace TwitchToSpeech.ViewModel
         private SpeechSynthesizer speech;
         private TwitchAPI twitchAPI;
         private TwitchClient twitchClient;
+        private NamedPipeClientStream pipeClient;
+        private CancellationTokenSource pipeClientCTS;
+        private ConcurrentQueue<string> pipeMessages = new ConcurrentQueue<string>();
 
         public MainViewModel()
         {
@@ -57,6 +66,7 @@ namespace TwitchToSpeech.ViewModel
                 // Code runs "for real"
                 this.PropertyChanged += this.MainViewModel_PropertyChanged;
                 LoadedCommand = new RelayCommand(Loaded);
+                ClosedCommand = new RelayCommand(Closed);
                 KeyDownCommand = new RelayCommand<KeyEventArgs>(KeyDown);
                 MenuItemSettingsCommand = new RelayCommand(OpenSettings);
                 MenuItemExitCommand = new RelayCommand(Application.Current.Shutdown);
@@ -71,11 +81,24 @@ namespace TwitchToSpeech.ViewModel
         {
             try
             {
-
+                SettingsChanged();
             }
             catch (Exception ex)
             {
                 ShowError(ex);
+            }
+        }
+
+        private void Closed()
+        {
+            try
+            {
+                DisposePipeClient();
+            }
+            catch (Exception ex)
+            {
+                // Doesnt make sense to show an error if all is already closed
+                //ShowError(ex);
             }
         }
 
@@ -122,6 +145,7 @@ namespace TwitchToSpeech.ViewModel
             }
         }
 
+        #region Twitch Events
         private void TwitchClient_OnMessageReceived(object sender, OnMessageReceivedArgs e)
         {
             if (e.ChatMessage.IsMe)
@@ -147,7 +171,7 @@ namespace TwitchToSpeech.ViewModel
         }
 
         private void TwitchClient_OnUserJoined(object sender, OnUserJoinedArgs e)
-        { 
+        {
             ShowMessage($"{e.Username} ist da", Settings.Instance.UserJoinedNotification);
         }
 
@@ -165,6 +189,7 @@ namespace TwitchToSpeech.ViewModel
         {
             ShowMessage("Kleint verbunden", Settings.Instance.ClientConnectedNotification);
         }
+        #endregion
 
         private void KeyDown(KeyEventArgs e)
         {
@@ -182,7 +207,65 @@ namespace TwitchToSpeech.ViewModel
                 Log.Information(text);
             if (userLeftNotification.Speech)
                 Speak(text);
+            if (Settings.Instance.ConnectToPipeServer)
+                pipeMessages.Enqueue(text);
         }
+
+        private void SettingsChanged()
+        {
+            try
+            {
+                if (Settings.Instance.ConnectToPipeServer)
+                    Task.Run(StartPipeClient);
+                else
+                    DisposePipeClient();
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex);
+            }
+        }
+
+        #region Pipe Client
+        private async Task StartPipeClient()
+        {
+            try
+            {
+                pipeClientCTS = new CancellationTokenSource();
+                pipeClient = new NamedPipeClientStream(".", Settings.Instance.PipeServerName, PipeDirection.Out);
+                await pipeClient.ConnectAsync(pipeClientCTS.Token).ConfigureAwait(false);
+
+                while (!pipeClientCTS.IsCancellationRequested)
+                {
+                    if (pipeMessages.TryDequeue(out var msg))
+                    {
+                        var buffer = Encoding.UTF32.GetBytes(msg);
+                        pipeClient.Write(buffer, 0, buffer.Length);
+                        pipeClient.Flush();
+                    }
+                    else
+                    {
+                        // Avoid heavy CPU load
+                        Thread.Sleep(100);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex);
+            }
+        }
+
+        private void DisposePipeClient()
+        {
+            pipeClientCTS?.Cancel();
+            pipeClientCTS?.Dispose();
+            pipeClientCTS = null;
+
+            pipeClient?.Dispose();
+            pipeClientCTS = null;
+        }
+        #endregion
 
         private void MainViewModel_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
@@ -239,6 +322,7 @@ namespace TwitchToSpeech.ViewModel
                         {
                             Settings.Instance = model.Settings;
                             Settings.Safe();
+                            SettingsChanged();
                         }
                     })).ConfigureAwait(false);
             }
