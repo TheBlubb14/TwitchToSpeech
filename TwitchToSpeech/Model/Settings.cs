@@ -32,7 +32,30 @@ namespace TwitchToSpeech.Model
         public static void Load()
         {
             if (File.Exists(Location))
+            {
                 Instance = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(Location));
+
+                if (Instance.SubscriberNotification is null)
+                    Instance.SubscriberNotification = new NotificationSetting();
+
+                if (Instance.RaidNotification is null)
+                    Instance.RaidNotification = new NotificationSetting();
+
+                if (Instance.UserJoinedNotification is null)
+                    Instance.UserJoinedNotification = new NotificationSetting();
+
+                if (Instance.UserLeftNotification is null)
+                    Instance.UserLeftNotification = new NotificationSetting();
+
+                if (Instance.BeingHostedNotification is null)
+                    Instance.BeingHostedNotification = new NotificationSetting();
+
+                if (Instance.MessageNotification is null)
+                    Instance.MessageNotification = new NotificationSetting();
+
+                if (Instance.ClientConnectedNotification is null)
+                    Instance.ClientConnectedNotification = new NotificationSetting();
+            }
         }
 
         public Settings()
@@ -76,7 +99,7 @@ namespace TwitchToSpeech.Model
         public string PipeServerName { get; set; }
     }
 
-    public class NotificationSetting
+    public class NotificationSetting : ObservableObject
     {
         public bool Speech { get; set; }
         public bool Text { get; set; }

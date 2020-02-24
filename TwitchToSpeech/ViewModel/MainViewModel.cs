@@ -231,11 +231,15 @@ namespace TwitchToSpeech.ViewModel
         {
             try
             {
+                // Already started
+                if (pipeClient != null)
+                    return;
+
                 pipeClientCTS = new CancellationTokenSource();
                 pipeClient = new NamedPipeClientStream(".", Settings.Instance.PipeServerName, PipeDirection.Out);
                 await pipeClient.ConnectAsync(pipeClientCTS.Token).ConfigureAwait(false);
 
-                while (!pipeClientCTS.IsCancellationRequested)
+                while (pipeClientCTS != null && !pipeClientCTS.IsCancellationRequested)
                 {
                     if (pipeMessages.TryDequeue(out var msg))
                     {
