@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using TwitchLib.Communication.Models;
 
 namespace TwitchToSpeech.Model
 {
@@ -135,6 +136,8 @@ namespace TwitchToSpeech.Model
 
         [JsonIgnore]
         public IReadOnlyDictionary<string, string> UserNicknames { get; set; }
+
+        public bool ReplaceBsr { get; set; }
     }
 
     public class NotificationSetting : ObservableObject

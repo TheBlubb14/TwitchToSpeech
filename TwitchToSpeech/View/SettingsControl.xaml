@@ -88,7 +88,10 @@
                 <Expander HorizontalAlignment="Stretch" Header="Filter" Grid.Column="0" Grid.Row="4">
                     <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
                         <Expander HorizontalAlignment="Stretch" Header="Messages" >
-                            <TextBox TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Settings.PrefixListText, Mode=TwoWay}"  Margin="0 0 0 8" wpf:HintAssist.Hint="Ignore messages with the following prefixes" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                            <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
+                                <TextBox TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Settings.PrefixListText, Mode=TwoWay}"  Margin="0 0 0 8" wpf:HintAssist.Hint="Ignore messages with the following prefixes" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                                <CheckBox Content="Replace !bsr" IsChecked="{Binding Settings.ReplaceBsr}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                            </StackPanel>
                         </Expander>
                         <Expander HorizontalAlignment="Stretch" Header="Users" >
                             <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">

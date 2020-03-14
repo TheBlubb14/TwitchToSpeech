@@ -3,6 +3,8 @@ using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Ioc;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
 using System.Collections.Concurrent;
@@ -10,9 +12,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO.Pipes;
 using System.Linq;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Speech.Synthesis;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -41,6 +45,8 @@ namespace TwitchToSpeech.ViewModel
 
         public ObservableCollection<string> Logs { get; set; } = new ObservableCollection<string>();
 
+        private readonly Regex bsrRegex = new Regex(@"!bsr\s([^\s]*)");
+        private readonly HttpClient httpClient = new HttpClient();
         private readonly ObservableCollection<Exception> StartupExceptions = new ObservableCollection<Exception>();
         private bool IsSettingsDialogOpen;
         private SpeechSynthesizer speech;
@@ -189,7 +195,7 @@ namespace TwitchToSpeech.ViewModel
         }
 
         #region Twitch Events
-        private void TwitchClient_OnMessageReceived(object sender, OnMessageReceivedArgs e)
+        private async void TwitchClient_OnMessageReceived(object sender, OnMessageReceivedArgs e)
         {
             if (e.ChatMessage.IsMe)
                 return;
@@ -200,7 +206,17 @@ namespace TwitchToSpeech.ViewModel
             if (Settings.Instance.PrefixList?.Any(x => e.ChatMessage.Message.StartsWith(x, StringComparison.OrdinalIgnoreCase)) ?? false)
                 return;
 
-            ShowMessage($"{ReplaceNickname(e.ChatMessage.Username)}: {e.ChatMessage.Message}", Settings.Instance.MessageNotification);
+            if (Settings.Instance.ReplaceBsr && bsrRegex.IsMatch(e.ChatMessage.Message))
+            {
+                var match = bsrRegex.Match(e.ChatMessage.Message);
+                var bsrKey = match.Groups[1].Value;
+                var song = await GetBeatSaverSongName(bsrKey);
+                ShowMessage($"{ReplaceNickname(e.ChatMessage.Username)} wünscht sich {song}", Settings.Instance.MessageNotification);
+            }
+            else
+            {
+                ShowMessage($"{ReplaceNickname(e.ChatMessage.Username)}: {e.ChatMessage.Message}", Settings.Instance.MessageNotification);
+            }
         }
 
         private void TwitchClient_OnBeingHosted(object sender, OnBeingHostedArgs e)
@@ -222,6 +238,9 @@ namespace TwitchToSpeech.ViewModel
         private void TwitchClient_OnUserJoined(object sender, OnUserJoinedArgs e)
         {
             if (Settings.Instance.UserBlacklist.Contains(e.Username, StringComparer.OrdinalIgnoreCase))
+                return;
+
+            if (string.Equals(e.Username, Settings.Instance.Username, StringComparison.OrdinalIgnoreCase))
                 return;
 
             ShowMessage($"{ReplaceNickname(e.Username)} ist da", Settings.Instance.UserJoinedNotification);
@@ -387,6 +406,21 @@ namespace TwitchToSpeech.ViewModel
         private string ReplaceNickname(string userName)
         {
             return Settings.Instance.UserNicknames.ContainsKey(userName) ? Settings.Instance.UserNicknames[userName] : userName;
+        }
+
+        private async Task<string> GetBeatSaverSongName(string key)
+        {
+            try
+            {
+                var details = await httpClient.GetStringAsync($"https://beatsaver.com/api/maps/detail/{key}");
+                var deserialized = JObject.Parse(details);
+                return deserialized.SelectToken("metadata").Value<string>("songName");
+            }
+            catch (Exception ex)
+            {
+                ShowError(ex);
+                return "einen Song";
+            }
         }
     }
 }
