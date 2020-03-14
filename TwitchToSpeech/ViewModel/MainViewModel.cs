@@ -192,6 +192,9 @@ namespace TwitchToSpeech.ViewModel
             if (e.ChatMessage.IsMe)
                 return;
 
+            if (Settings.Instance.UserBlacklist.Contains(e.ChatMessage.Username, StringComparer.OrdinalIgnoreCase))
+                return;
+
             if (Settings.Instance.PrefixList?.Any(x => e.ChatMessage.Message.StartsWith(x, StringComparison.OrdinalIgnoreCase)) ?? false)
                 return;
 
@@ -208,11 +211,17 @@ namespace TwitchToSpeech.ViewModel
 
         private void TwitchClient_OnUserLeft(object sender, OnUserLeftArgs e)
         {
-            ShowMessage($"{e.Username} ist weg", Settings.Instance.UserLeftNotification);
+            if (Settings.Instance.UserBlacklist.Contains(e.Username, StringComparer.OrdinalIgnoreCase))
+                return;
+
+                ShowMessage($"{e.Username} ist weg", Settings.Instance.UserLeftNotification);
         }
 
         private void TwitchClient_OnUserJoined(object sender, OnUserJoinedArgs e)
         {
+            if (Settings.Instance.UserBlacklist.Contains(e.Username, StringComparer.OrdinalIgnoreCase))
+                return;
+
             ShowMessage($"{e.Username} ist da", Settings.Instance.UserJoinedNotification);
         }
 
@@ -228,7 +237,7 @@ namespace TwitchToSpeech.ViewModel
 
         private void TwitchClient_OnConnected(object sender, OnConnectedArgs e)
         {
-            ShowMessage("Kleint verbunden", Settings.Instance.ClientConnectedNotification);
+            ShowMessage("Verbunden", Settings.Instance.ClientConnectedNotification);
         }
         #endregion
 

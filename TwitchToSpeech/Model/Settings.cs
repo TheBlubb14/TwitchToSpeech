@@ -70,6 +70,8 @@ namespace TwitchToSpeech.Model
         {
             if (e.PropertyName == nameof(PrefixListText))
                 PrefixList = PrefixListText.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            else if (e.PropertyName == nameof(UserBlacklistText))
+                UserBlacklist = UserBlacklistText.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
         }
 
         [JsonIgnore]
@@ -108,6 +110,11 @@ namespace TwitchToSpeech.Model
         public string ClientId { get; set; }
 
         public string AccessToken { get; set; }
+
+        public string UserBlacklistText { get; set; }
+
+        [JsonIgnore]
+        public IReadOnlyCollection<string> UserBlacklist { get; set; }
     }
 
     public class NotificationSetting : ObservableObject
