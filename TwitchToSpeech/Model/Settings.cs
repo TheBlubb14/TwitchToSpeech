@@ -55,6 +55,9 @@ namespace TwitchToSpeech.Model
 
                 if (Instance.ClientConnectedNotification is null)
                     Instance.ClientConnectedNotification = new NotificationSetting();
+
+                if (Instance.NewFollowerNotification is null)
+                    Instance.NewFollowerNotification = new NotificationSetting();
             }
         }
 
@@ -94,9 +97,17 @@ namespace TwitchToSpeech.Model
 
         public NotificationSetting ClientConnectedNotification { get; set; }
 
+        public NotificationSetting NewFollowerNotification { get; set; }
+
         public bool ConnectToPipeServer { get; set; }
 
         public string PipeServerName { get; set; }
+
+        public bool CheckForNewFollowers { get; set; }
+
+        public string ClientId { get; set; }
+
+        public string AccessToken { get; set; }
     }
 
     public class NotificationSetting : ObservableObject

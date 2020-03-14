@@ -4,13 +4,12 @@ using GalaSoft.MvvmLight.Ioc;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.Logging;
 using Serilog;
-using Serilog.Data;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO.Pipes;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Speech.Synthesis;
 using System.Text;
@@ -20,6 +19,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using TwitchLib.Api;
+using TwitchLib.Api.Services;
 using TwitchLib.Client;
 using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
@@ -49,6 +49,7 @@ namespace TwitchToSpeech.ViewModel
         private NamedPipeClientStream pipeClient;
         private CancellationTokenSource pipeClientCTS;
         private ConcurrentQueue<string> pipeMessages = new ConcurrentQueue<string>();
+        private FollowerService followerService;
 
         public MainViewModel()
         {
@@ -94,6 +95,8 @@ namespace TwitchToSpeech.ViewModel
             try
             {
                 DisposePipeClient();
+                followerService?.Stop();
+                twitchClient?.Disconnect();
             }
             catch (Exception ex)
             {
@@ -118,13 +121,30 @@ namespace TwitchToSpeech.ViewModel
                     return;
                 }
 
+                if (Settings.Instance.CheckForNewFollowers)
+                {
+                    if (string.IsNullOrWhiteSpace(Settings.Instance.ClientId))
+                    {
+                        ShowMessage("Twitch Api Client ID ist in den Einstellungen nicht gesetzt", new NotificationSetting(false, true));
+                        return;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(Settings.Instance.AccessToken))
+                    {
+                        ShowMessage("Twitch Api Access Token ist in den Einstellungen nicht gesetzt", new NotificationSetting(false, true));
+                        return;
+                    }
+                }
+
                 var loggerfactory = new LoggerFactory()
-                    .AddSerilog(
-                    new LoggerConfiguration()
-                    .WriteTo.File("logs\\twitch.log")
-                    .CreateLogger());
+                .AddSerilog(
+                new LoggerConfiguration()
+                .WriteTo.File("logs\\twitch.log")
+                .CreateLogger());
 
                 twitchAPI = new TwitchAPI(loggerfactory);
+                twitchAPI.Settings.ClientId = Settings.Instance.ClientId;
+                twitchAPI.Settings.AccessToken = Settings.Instance.AccessToken;
                 twitchClient = new TwitchClient(logger: loggerfactory.CreateLogger<TwitchClient>());
                 twitchClient.OnConnected += TwitchClient_OnConnected;
                 twitchClient.OnNewSubscriber += TwitchClient_OnNewSubscriber;
@@ -137,12 +157,33 @@ namespace TwitchToSpeech.ViewModel
                 twitchClient.Initialize(new ConnectionCredentials(Settings.Instance.Username, Settings.Instance.OAuthToken), Settings.Instance.ChannelToJoin);
                 twitchClient.Connect();
 
+                if (Settings.Instance.CheckForNewFollowers)
+                {
+                    followerService = new FollowerService(twitchAPI, checkIntervalInSeconds: 5);
+                    followerService.SetChannelsByName(new List<string>() { Settings.Instance.ChannelToJoin });
+                    followerService.OnNewFollowersDetected += FollowerService_OnNewFollowersDetected;
+                    followerService.UpdateLatestFollowersAsync(false);
+                    followerService.Start();
+                }
+
                 IsTwitchConnected = true;
             }
             catch (Exception ex)
             {
                 ShowError(ex);
             }
+        }
+
+        private void FollowerService_OnNewFollowersDetected(object sender, TwitchLib.Api.Services.Events.FollowerService.OnNewFollowersDetectedArgs e)
+        {
+            var followers = e.NewFollowers.Select(x => x.FromUserName);
+            var msg = string.Join(" und ", followers);
+            var msgEndIndex = msg.LastIndexOf(" und ");
+
+            if (msgEndIndex > 0)
+                msg = msg.Substring(0, msgEndIndex);
+
+            ShowMessage($"{msg} {(followers.Count() > 1 ? "folgen" : "folgt")} nun", Settings.Instance.NewFollowerNotification);
         }
 
         #region Twitch Events

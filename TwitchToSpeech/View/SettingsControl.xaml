@@ -38,6 +38,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <!--Content-->
 
@@ -50,7 +51,15 @@
                     </StackPanel>
                 </Expander>
 
-                <Expander HorizontalAlignment="Stretch" Header="Notifications Speech" Grid.Column="0" Grid.Row="1">
+                <Expander HorizontalAlignment="Stretch" Header="Twitch API" Grid.Column="0" Grid.Row="1">
+                    <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
+                        <TextBox Text="{Binding Settings.ClientId, Mode=TwoWay}" Margin="0 0 0 8" wpf:HintAssist.Hint="Twitch API Client ID" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                        <TextBox Text="{Binding Settings.AccessToken, Mode=TwoWay}" Margin="0 0 0 8" wpf:HintAssist.Hint="Twitch API AccessToken" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                        <CheckBox Content="Check for new Followers" IsChecked="{Binding Settings.CheckForNewFollowers}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                    </StackPanel>
+                </Expander>
+
+                <Expander HorizontalAlignment="Stretch" Header="Notifications Speech" Grid.Column="0" Grid.Row="2">
                     <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
                         <CheckBox Content="Subscriber Notification" IsChecked="{Binding Settings.SubscriberNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                         <CheckBox Content="Raid Notification" IsChecked="{Binding Settings.RaidNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
@@ -59,10 +68,11 @@
                         <CheckBox Content="Being Hosted Notification" IsChecked="{Binding Settings.BeingHostedNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                         <CheckBox Content="Message Notification" IsChecked="{Binding Settings.MessageNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                         <CheckBox Content="Connected Notification" IsChecked="{Binding Settings.ClientConnectedNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="New Follower Notification" IsChecked="{Binding Settings.NewFollowerNotification.Speech}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                     </StackPanel>
                 </Expander>
                 
-                <Expander HorizontalAlignment="Stretch" Header="Notifications Text" Grid.Column="0" Grid.Row="2">
+                <Expander HorizontalAlignment="Stretch" Header="Notifications Text" Grid.Column="0" Grid.Row="3">
                     <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
                         <CheckBox Content="Subscriber Notification" IsChecked="{Binding Settings.SubscriberNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                         <CheckBox Content="Raid Notification" IsChecked="{Binding Settings.RaidNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
@@ -71,16 +81,17 @@
                         <CheckBox Content="Being Hosted Notification" IsChecked="{Binding Settings.BeingHostedNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                         <CheckBox Content="Message Notification" IsChecked="{Binding Settings.MessageNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                         <CheckBox Content="Connected Notification" IsChecked="{Binding Settings.ClientConnectedNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="New Follower Notification" IsChecked="{Binding Settings.NewFollowerNotification.Text}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                     </StackPanel>
                 </Expander>
                 
-                <Expander HorizontalAlignment="Stretch" Header="Filter" Grid.Column="0" Grid.Row="3">
+                <Expander HorizontalAlignment="Stretch" Header="Filter" Grid.Column="0" Grid.Row="4">
                     <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
                         <TextBox TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Settings.PrefixListText, Mode=TwoWay}"  Margin="0 0 0 8" wpf:HintAssist.Hint="Ignore messages with the following prefixes" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
                     </StackPanel>
                 </Expander>
 
-                <Expander HorizontalAlignment="Stretch" Header="Pipe Server" Grid.Column="0" Grid.Row="4">
+                <Expander HorizontalAlignment="Stretch" Header="Pipe Server" Grid.Column="0" Grid.Row="5">
                     <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
                         <CheckBox Content="Connect" IsChecked="{Binding Settings.ConnectToPipeServer}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                         <TextBox Text="{Binding Settings.PipeServerName, Mode=TwoWay}" Margin="0 0 0 8" wpf:HintAssist.Hint="Pipe Name" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
