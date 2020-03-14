@@ -91,7 +91,10 @@
                             <TextBox TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Settings.PrefixListText, Mode=TwoWay}"  Margin="0 0 0 8" wpf:HintAssist.Hint="Ignore messages with the following prefixes" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
                         </Expander>
                         <Expander HorizontalAlignment="Stretch" Header="Users" >
-                            <TextBox TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Settings.UserBlacklistText, Mode=TwoWay}"  Margin="0 0 0 8" wpf:HintAssist.Hint="Ignore the following users" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                            <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
+                                <TextBox TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Settings.UserBlacklistText, Mode=TwoWay}"  Margin="0 0 0 8" wpf:HintAssist.Hint="Ignore the following users" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                                <TextBox TextWrapping="Wrap" AcceptsReturn="True" Text="{Binding Settings.UserNicknamesText, Mode=TwoWay}"  Margin="0 0 0 8" wpf:HintAssist.Hint="Set Nicknames like UserA:MyBestFriend" Style="{StaticResource MaterialDesignFloatingHintTextBox}"/>
+                            </StackPanel>
                         </Expander>
                     </StackPanel>
                 </Expander>

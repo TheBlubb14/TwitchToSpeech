@@ -176,7 +176,9 @@ namespace TwitchToSpeech.ViewModel
 
         private void FollowerService_OnNewFollowersDetected(object sender, TwitchLib.Api.Services.Events.FollowerService.OnNewFollowersDetectedArgs e)
         {
-            var followers = e.NewFollowers.Select(x => x.FromUserName);
+            var followers = e.NewFollowers
+                .Select(x => ReplaceNickname(x.FromUserName));
+
             var msg = string.Join(" und ", followers);
             var msgEndIndex = msg.LastIndexOf(" und ");
 
@@ -198,7 +200,7 @@ namespace TwitchToSpeech.ViewModel
             if (Settings.Instance.PrefixList?.Any(x => e.ChatMessage.Message.StartsWith(x, StringComparison.OrdinalIgnoreCase)) ?? false)
                 return;
 
-            ShowMessage($"{e.ChatMessage.Username}: {e.ChatMessage.Message}", Settings.Instance.MessageNotification);
+            ShowMessage($"{ReplaceNickname(e.ChatMessage.Username)}: {e.ChatMessage.Message}", Settings.Instance.MessageNotification);
         }
 
         private void TwitchClient_OnBeingHosted(object sender, OnBeingHostedArgs e)
@@ -214,7 +216,7 @@ namespace TwitchToSpeech.ViewModel
             if (Settings.Instance.UserBlacklist.Contains(e.Username, StringComparer.OrdinalIgnoreCase))
                 return;
 
-                ShowMessage($"{e.Username} ist weg", Settings.Instance.UserLeftNotification);
+            ShowMessage($"{ReplaceNickname(e.Username)} ist weg", Settings.Instance.UserLeftNotification);
         }
 
         private void TwitchClient_OnUserJoined(object sender, OnUserJoinedArgs e)
@@ -222,17 +224,17 @@ namespace TwitchToSpeech.ViewModel
             if (Settings.Instance.UserBlacklist.Contains(e.Username, StringComparer.OrdinalIgnoreCase))
                 return;
 
-            ShowMessage($"{e.Username} ist da", Settings.Instance.UserJoinedNotification);
+            ShowMessage($"{ReplaceNickname(e.Username)} ist da", Settings.Instance.UserJoinedNotification);
         }
 
         private void TwitchClient_OnRaidNotification(object sender, OnRaidNotificationArgs e)
         {
-            ShowMessage($"{e.RaidNotification.DisplayName} raidet mit {e.RaidNotification.MsgParamViewerCount} Leuten", Settings.Instance.RaidNotification);
+            ShowMessage($"{ReplaceNickname(e.RaidNotification.DisplayName)} raidet mit {e.RaidNotification.MsgParamViewerCount} Leuten", Settings.Instance.RaidNotification);
         }
 
         private void TwitchClient_OnNewSubscriber(object sender, OnNewSubscriberArgs e)
         {
-            ShowMessage($"{e.Subscriber.DisplayName} hat abonniert", Settings.Instance.SubscriberNotification);
+            ShowMessage($"{ReplaceNickname(e.Subscriber.DisplayName)} hat abonniert", Settings.Instance.SubscriberNotification);
         }
 
         private void TwitchClient_OnConnected(object sender, OnConnectedArgs e)
@@ -380,6 +382,11 @@ namespace TwitchToSpeech.ViewModel
                         }
                     })).ConfigureAwait(false);
             }
+        }
+
+        private string ReplaceNickname(string userName)
+        {
+            return Settings.Instance.UserNicknames.ContainsKey(userName) ? Settings.Instance.UserNicknames[userName] : userName;
         }
     }
 }

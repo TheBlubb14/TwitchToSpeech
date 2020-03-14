@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace TwitchToSpeech.Model
@@ -69,9 +70,23 @@ namespace TwitchToSpeech.Model
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
             if (e.PropertyName == nameof(PrefixListText))
+            {
                 PrefixList = PrefixListText.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            }
             else if (e.PropertyName == nameof(UserBlacklistText))
+            {
                 UserBlacklist = UserBlacklistText.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+            }
+            else if (e.PropertyName == nameof(UserNicknamesText))
+            {
+                UserNicknames =
+                    new Dictionary<string, string>(
+                        UserNicknamesText
+                        .Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(x => x.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries))
+                        .ToDictionary(x => x[0], y => y[1]),
+                   StringComparer.OrdinalIgnoreCase);
+            }
         }
 
         [JsonIgnore]
@@ -115,6 +130,11 @@ namespace TwitchToSpeech.Model
 
         [JsonIgnore]
         public IReadOnlyCollection<string> UserBlacklist { get; set; }
+
+        public string UserNicknamesText { get; set; }
+
+        [JsonIgnore]
+        public IReadOnlyDictionary<string, string> UserNicknames { get; set; }
     }
 
     public class NotificationSetting : ObservableObject
