@@ -39,6 +39,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <!--Content-->
 
@@ -106,6 +107,24 @@
                     <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
                         <CheckBox Content="Connect" IsChecked="{Binding Settings.ConnectToPipeServer}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                         <TextBox Text="{Binding Settings.PipeServerName, Mode=TwoWay}" Margin="0 0 0 8" wpf:HintAssist.Hint="Pipe Name" Style="{StaticResource MaterialDesignFloatingHintTextBox}" />
+                    </StackPanel>
+                </Expander>
+
+                <Expander HorizontalAlignment="Stretch" Header="Babel" Grid.Column="0" Grid.Row="6">
+                    <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
+                        <CheckBox Content="Dynamically switch language" IsChecked="{Binding Settings.BabelSettings.DynamicallySwitchLanguage}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <ItemsControl ItemsSource="{Binding Settings.BabelSettings.Languages}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <CheckBox Content="{Binding Culture.DisplayName}" IsChecked="{Binding Selected}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <WrapPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
                     </StackPanel>
                 </Expander>
             </Grid>

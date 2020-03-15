@@ -2,6 +2,8 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -60,6 +62,15 @@ namespace TwitchToSpeech.Model
 
                 if (Instance.NewFollowerNotification is null)
                     Instance.NewFollowerNotification = new NotificationSetting();
+
+                if (Instance.BabelSettings is null)
+                {
+                    Instance.BabelSettings = new BabelSettings()
+                    {
+                        Languages = new ObservableCollection<BabelLanguage>(
+                            BabelSettings.SupportedLanguages.Select(x => new BabelLanguage(x)))
+                    };
+                }
             }
         }
 
@@ -138,6 +149,8 @@ namespace TwitchToSpeech.Model
         public IReadOnlyDictionary<string, string> UserNicknames { get; set; }
 
         public bool ReplaceBsr { get; set; }
+
+        public BabelSettings BabelSettings { get; set; }
     }
 
     public class NotificationSetting : ObservableObject
@@ -154,6 +167,36 @@ namespace TwitchToSpeech.Model
         {
             this.Speech = speech;
             this.Text = text;
+        }
+    }
+
+    public class BabelSettings : ObservableObject
+    {
+        public bool DynamicallySwitchLanguage { get; set; }
+
+        public ObservableCollection<BabelLanguage> Languages { get; set; }
+
+        [JsonIgnore]
+        public static readonly string[] SupportedLanguages = new string[]
+        {
+            "nl", "en", "ca", "fr", "es", "no", "da", "it", "sv",
+            "de", "pt", "ro", "vi", "tr", "fi", "hu", "cs", "pl",
+            "el", "fa", "he", "sr", "sl", "ar", "nn", "ru", "et",
+            "ko", "hi", "is", "th", "bn", "ja", "zh", "se"
+        };
+    }
+
+    public class BabelLanguage : ObservableObject
+    {
+        public CultureInfo Culture { get; }
+
+        public string Code => Culture.IetfLanguageTag;
+
+        public bool Selected { get; set; }
+
+        public BabelLanguage(string code)
+        {
+            Culture = CultureInfo.GetCultureInfo(code);
         }
     }
 }

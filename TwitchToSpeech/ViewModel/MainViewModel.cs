@@ -1,3 +1,4 @@
+using DialogueMaster.Babel;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Ioc;
@@ -10,6 +11,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net.Http;
@@ -56,6 +58,7 @@ namespace TwitchToSpeech.ViewModel
         private CancellationTokenSource pipeClientCTS;
         private ConcurrentQueue<string> pipeMessages = new ConcurrentQueue<string>();
         private FollowerService followerService;
+        private BabelModel babelModel;
 
         public MainViewModel()
         {
@@ -215,7 +218,7 @@ namespace TwitchToSpeech.ViewModel
             }
             else
             {
-                ShowMessage($"{ReplaceNickname(e.ChatMessage.Username)}: {e.ChatMessage.Message}", Settings.Instance.MessageNotification);
+                ShowChatMessage(ReplaceNickname(e.ChatMessage.Username), e.ChatMessage.Message, Settings.Instance.MessageNotification);
             }
         }
 
@@ -272,12 +275,25 @@ namespace TwitchToSpeech.ViewModel
 
         private bool IsControl => (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
 
-        private void ShowMessage(string text, NotificationSetting userLeftNotification)
+        private void ShowMessage(string text, NotificationSetting notificationSetting)
         {
-            if (userLeftNotification.Text)
+            if (notificationSetting.Text)
                 Log.Information(text);
-            if (userLeftNotification.Speech)
+            if (notificationSetting.Speech)
                 Speak(text);
+            if (Settings.Instance.ConnectToPipeServer)
+                pipeMessages.Enqueue(text);
+        }
+
+
+        private void ShowChatMessage(string username, string message, NotificationSetting notificationSetting)
+        {
+            var text = $"{username}: {message}";
+
+            if (notificationSetting.Text)
+                Log.Information(text);
+            if (notificationSetting.Speech)
+                Speak(message, true);
             if (Settings.Instance.ConnectToPipeServer)
                 pipeMessages.Enqueue(text);
         }
@@ -290,6 +306,16 @@ namespace TwitchToSpeech.ViewModel
                     Task.Run(StartPipeClient);
                 else
                     DisposePipeClient();
+
+                if (Settings.Instance.BabelSettings.DynamicallySwitchLanguage)
+                {
+                    babelModel = new BabelModel();
+                    Settings.Instance.BabelSettings.Languages
+                        .Where(x => x.Selected)
+                        .Select(x => x.Code)
+                        .ToList()
+                        .ForEach(x => babelModel.Add(x, BabelModel._AllModel[x]));
+                }
             }
             catch (Exception ex)
             {
@@ -376,9 +402,30 @@ namespace TwitchToSpeech.ViewModel
             StartupExceptions.Clear();
         }
 
-        public void Speak(string text)
+        public void Speak(string text, bool useBabel = false)
         {
-            speech.SpeakAsync(text);
+            if (useBabel && Settings.Instance.BabelSettings.DynamicallySwitchLanguage)
+            {
+                // Detect written language
+                var result = babelModel.ClassifyText(text);
+                var selectedResult = result.OrderByDescending(x => x.Score).FirstOrDefault();
+
+                var culture = CultureInfo.CurrentUICulture;
+                if (selectedResult != null)
+                {
+                    Log.Information($"Babel: {text} {string.Join(" ", result.Select(x => $"[{x.Name}:{x.Score}]"))}");
+                    // Get cached culture
+                    culture = Settings.Instance.BabelSettings.Languages.First(x => x.Code == selectedResult.Name).Culture;
+                }
+
+                var prompt = new PromptBuilder(culture);
+                prompt.AppendText(text);
+                speech.SpeakAsync(prompt);
+            }
+            else
+            {
+                speech.SpeakAsync(text);
+            }
         }
 
         private async void OpenSettings()

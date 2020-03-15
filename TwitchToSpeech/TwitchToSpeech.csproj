@@ -40,6 +40,9 @@
     <ApplicationIcon>account-voice.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="DialogueMaster.Babel">
+      <HintPath>.\DialogueMaster.Babel.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Speech" />
