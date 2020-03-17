@@ -292,8 +292,15 @@ namespace TwitchToSpeech.ViewModel
 
             if (notificationSetting.Text)
                 Log.Information(text);
+
             if (notificationSetting.Speech)
-                Speak(message, true);
+            {
+                if (Settings.Instance.BabelSettings.DynamicallySwitchLanguage)
+                    SpeakBabel(username, message);
+                else
+                    Speak(text);
+            }
+
             if (Settings.Instance.ConnectToPipeServer)
                 pipeMessages.Enqueue(text);
         }
@@ -402,30 +409,30 @@ namespace TwitchToSpeech.ViewModel
             StartupExceptions.Clear();
         }
 
-        public void Speak(string text, bool useBabel = false)
+        public void Speak(string text)
         {
-            if (useBabel && Settings.Instance.BabelSettings.DynamicallySwitchLanguage)
-            {
-                // Detect written language
-                var result = babelModel.ClassifyText(text);
-                var selectedResult = result.OrderByDescending(x => x.Score).FirstOrDefault();
+            speech.SpeakAsync(text);
+        }
 
-                var culture = CultureInfo.CurrentUICulture;
-                if (selectedResult != null)
-                {
-                    Log.Information($"Babel: {text} {string.Join(" ", result.Select(x => $"[{x.Name}:{x.Score}]"))}");
-                    // Get cached culture
-                    culture = Settings.Instance.BabelSettings.Languages.First(x => x.Code == selectedResult.Name).Culture;
-                }
+        public void SpeakBabel(string userName, string message)
+        {
+            var text = $"{userName}: " + message;
 
-                var prompt = new PromptBuilder(culture);
-                prompt.AppendText(text);
-                speech.SpeakAsync(prompt);
-            }
-            else
+            // Detect written language
+            var result = babelModel.ClassifyText(message);
+            var selectedResult = result.OrderByDescending(x => x.Score).FirstOrDefault();
+
+            var culture = CultureInfo.CurrentUICulture;
+            if (selectedResult != null)
             {
-                speech.SpeakAsync(text);
+                Log.Information($"Babel: {text} {string.Join(" ", result.Select(x => $"[{x.Name}:{x.Score}]"))}");
+                // Get cached culture
+                culture = Settings.Instance.BabelSettings.Languages.First(x => x.Code == selectedResult.Name).Culture;
             }
+
+            var prompt = new PromptBuilder(culture);
+            prompt.AppendText(text);
+            speech.SpeakAsync(prompt);
         }
 
         private async void OpenSettings()
@@ -452,7 +459,8 @@ namespace TwitchToSpeech.ViewModel
 
         private string ReplaceNickname(string userName)
         {
-            return Settings.Instance.UserNicknames.ContainsKey(userName) ? Settings.Instance.UserNicknames[userName] : userName;
+            return Settings.Instance.UserNicknames != null &&
+                Settings.Instance.UserNicknames.ContainsKey(userName) ? Settings.Instance.UserNicknames[userName] : userName;
         }
 
         private async Task<string> GetBeatSaverSongName(string key)
