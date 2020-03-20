@@ -120,27 +120,27 @@ namespace TwitchToSpeech.ViewModel
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(Settings.Instance.Username))
+                if (string.IsNullOrWhiteSpace(Settings.Username))
                 {
                     ShowMessage("Twitch Benutzername ist in den Einstellungen nicht gesetzt", new NotificationSetting(false, true));
                     return;
                 }
 
-                if (string.IsNullOrWhiteSpace(Settings.Instance.OAuthToken))
+                if (string.IsNullOrWhiteSpace(Settings.OAuthToken))
                 {
                     ShowMessage("Twitch O Auth Token ist in den Einstellungen nicht gesetzt", new NotificationSetting(false, true));
                     return;
                 }
 
-                if (Settings.Instance.CheckForNewFollowers)
+                if (Settings.CheckForNewFollowers)
                 {
-                    if (string.IsNullOrWhiteSpace(Settings.Instance.ClientId))
+                    if (string.IsNullOrWhiteSpace(Settings.ClientId))
                     {
                         ShowMessage("Twitch Api Client ID ist in den Einstellungen nicht gesetzt", new NotificationSetting(false, true));
                         return;
                     }
 
-                    if (string.IsNullOrWhiteSpace(Settings.Instance.AccessToken))
+                    if (string.IsNullOrWhiteSpace(Settings.AccessToken))
                     {
                         ShowMessage("Twitch Api Access Token ist in den Einstellungen nicht gesetzt", new NotificationSetting(false, true));
                         return;
@@ -154,8 +154,8 @@ namespace TwitchToSpeech.ViewModel
                 .CreateLogger());
 
                 twitchAPI = new TwitchAPI(loggerfactory);
-                twitchAPI.Settings.ClientId = Settings.Instance.ClientId;
-                twitchAPI.Settings.AccessToken = Settings.Instance.AccessToken;
+                twitchAPI.Settings.ClientId = Settings.ClientId;
+                twitchAPI.Settings.AccessToken = Settings.AccessToken;
                 twitchClient = new TwitchClient(logger: loggerfactory.CreateLogger<TwitchClient>());
                 twitchClient.OnConnected += TwitchClient_OnConnected;
                 twitchClient.OnNewSubscriber += TwitchClient_OnNewSubscriber;
@@ -165,13 +165,13 @@ namespace TwitchToSpeech.ViewModel
                 twitchClient.OnBeingHosted += TwitchClient_OnBeingHosted;
                 twitchClient.OnMessageReceived += TwitchClient_OnMessageReceived;
 
-                twitchClient.Initialize(new ConnectionCredentials(Settings.Instance.Username, Settings.Instance.OAuthToken), Settings.Instance.ChannelToJoin);
+                twitchClient.Initialize(new ConnectionCredentials(Settings.Username, Settings.OAuthToken), Settings.ChannelToJoin);
                 twitchClient.Connect();
 
-                if (Settings.Instance.CheckForNewFollowers)
+                if (Settings.CheckForNewFollowers)
                 {
                     followerService = new FollowerService(twitchAPI, checkIntervalInSeconds: 5);
-                    followerService.SetChannelsByName(new List<string>() { Settings.Instance.ChannelToJoin });
+                    followerService.SetChannelsByName(new List<string>() { Settings.ChannelToJoin });
                     followerService.OnNewFollowersDetected += FollowerService_OnNewFollowersDetected;
                     followerService.UpdateLatestFollowersAsync(false);
                     followerService.Start();
@@ -196,7 +196,7 @@ namespace TwitchToSpeech.ViewModel
             if (msgEndIndex > 0)
                 msg = msg.Substring(0, msgEndIndex);
 
-            ShowMessage($"{msg} {(followers.Count() > 1 ? "folgen" : "folgt")} nun", Settings.Instance.NewFollowerNotification);
+            ShowMessage($"{msg} {(followers.Count() > 1 ? "folgen" : "folgt")} nun", Settings.NewFollowerNotification);
         }
 
         #region Twitch Events
@@ -205,22 +205,22 @@ namespace TwitchToSpeech.ViewModel
             if (e.ChatMessage.IsMe)
                 return;
 
-            if (Settings.Instance.UserBlacklist.Contains(e.ChatMessage.Username, StringComparer.OrdinalIgnoreCase))
+            if (Settings.UserBlacklist.Contains(e.ChatMessage.Username, StringComparer.OrdinalIgnoreCase))
                 return;
 
-            if (Settings.Instance.PrefixList?.Any(x => e.ChatMessage.Message.StartsWith(x, StringComparison.OrdinalIgnoreCase)) ?? false)
+            if (Settings.PrefixList?.Any(x => e.ChatMessage.Message.StartsWith(x, StringComparison.OrdinalIgnoreCase)) ?? false)
                 return;
 
-            if (Settings.Instance.ReplaceBsr && bsrRegex.IsMatch(e.ChatMessage.Message))
+            if (Settings.ReplaceBsr && bsrRegex.IsMatch(e.ChatMessage.Message))
             {
                 var match = bsrRegex.Match(e.ChatMessage.Message);
                 var bsrKey = match.Groups[1].Value;
                 var song = await GetBeatSaverSongName(bsrKey);
-                ShowMessage($"{ReplaceNickname(e.ChatMessage.Username)} wünscht sich {song}", Settings.Instance.MessageNotification);
+                ShowMessage($"{ReplaceNickname(e.ChatMessage.Username)} wünscht sich {song}", Settings.MessageNotification);
             }
             else
             {
-                ShowChatMessage(ReplaceNickname(e.ChatMessage.Username), e.ChatMessage.Message, Settings.Instance.MessageNotification);
+                ShowChatMessage(ReplaceNickname(e.ChatMessage.Username), e.ChatMessage.Message, Settings.MessageNotification);
             }
         }
 
@@ -229,41 +229,41 @@ namespace TwitchToSpeech.ViewModel
             if (e.BeingHostedNotification.IsAutoHosted)
                 return;
 
-            ShowMessage($"{e.BeingHostedNotification.HostedByChannel} hosted mit {e.BeingHostedNotification.Viewers} Leuten", Settings.Instance.BeingHostedNotification);
+            ShowMessage($"{e.BeingHostedNotification.HostedByChannel} hosted mit {e.BeingHostedNotification.Viewers} Leuten", Settings.BeingHostedNotification);
         }
 
         private void TwitchClient_OnUserLeft(object sender, OnUserLeftArgs e)
         {
-            if (Settings.Instance.UserBlacklist.Contains(e.Username, StringComparer.OrdinalIgnoreCase))
+            if (Settings.UserBlacklist.Contains(e.Username, StringComparer.OrdinalIgnoreCase))
                 return;
 
-            ShowMessage($"{ReplaceNickname(e.Username)} ist weg", Settings.Instance.UserLeftNotification);
+            ShowMessage($"{ReplaceNickname(e.Username)} ist weg", Settings.UserLeftNotification);
         }
 
         private void TwitchClient_OnUserJoined(object sender, OnUserJoinedArgs e)
         {
-            if (Settings.Instance.UserBlacklist.Contains(e.Username, StringComparer.OrdinalIgnoreCase))
+            if (Settings.UserBlacklist.Contains(e.Username, StringComparer.OrdinalIgnoreCase))
                 return;
 
-            if (string.Equals(e.Username, Settings.Instance.Username, StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(e.Username, Settings.Username, StringComparison.OrdinalIgnoreCase))
                 return;
 
-            ShowMessage($"{ReplaceNickname(e.Username)} ist da", Settings.Instance.UserJoinedNotification);
+            ShowMessage($"{ReplaceNickname(e.Username)} ist da", Settings.UserJoinedNotification);
         }
 
         private void TwitchClient_OnRaidNotification(object sender, OnRaidNotificationArgs e)
         {
-            ShowMessage($"{ReplaceNickname(e.RaidNotification.DisplayName)} raidet mit {e.RaidNotification.MsgParamViewerCount} Leuten", Settings.Instance.RaidNotification);
+            ShowMessage($"{ReplaceNickname(e.RaidNotification.DisplayName)} raidet mit {e.RaidNotification.MsgParamViewerCount} Leuten", Settings.RaidNotification);
         }
 
         private void TwitchClient_OnNewSubscriber(object sender, OnNewSubscriberArgs e)
         {
-            ShowMessage($"{ReplaceNickname(e.Subscriber.DisplayName)} hat abonniert", Settings.Instance.SubscriberNotification);
+            ShowMessage($"{ReplaceNickname(e.Subscriber.DisplayName)} hat abonniert", Settings.SubscriberNotification);
         }
 
         private void TwitchClient_OnConnected(object sender, OnConnectedArgs e)
         {
-            ShowMessage("Verbunden", Settings.Instance.ClientConnectedNotification);
+            ShowMessage("Verbunden", Settings.ClientConnectedNotification);
         }
         #endregion
 
@@ -283,7 +283,7 @@ namespace TwitchToSpeech.ViewModel
                 Log.Information(text);
             if (notificationSetting.Speech)
                 Speak(text);
-            if (Settings.Instance.ConnectToPipeServer)
+            if (Settings.ConnectToPipeServer)
                 pipeMessages.Enqueue(text);
         }
 
@@ -297,13 +297,13 @@ namespace TwitchToSpeech.ViewModel
 
             if (notificationSetting.Speech)
             {
-                if (Settings.Instance.BabelSettings.DynamicallySwitchLanguage)
+                if (Settings.BabelSettings.DynamicallySwitchLanguage)
                     SpeakBabel(username, message);
                 else
                     Speak(text);
             }
 
-            if (Settings.Instance.ConnectToPipeServer)
+            if (Settings.ConnectToPipeServer)
                 pipeMessages.Enqueue(text);
         }
 
@@ -313,15 +313,15 @@ namespace TwitchToSpeech.ViewModel
             {
                 PropertyChangedHandler.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Settings)));
 
-                if (Settings.Instance.ConnectToPipeServer)
+                if (Settings.ConnectToPipeServer)
                     Task.Run(StartPipeClient);
                 else
                     DisposePipeClient();
 
-                if (Settings.Instance.BabelSettings.DynamicallySwitchLanguage)
+                if (Settings.BabelSettings.DynamicallySwitchLanguage)
                 {
                     babelModel = new BabelModel();
-                    Settings.Instance.BabelSettings.Languages
+                    Settings.BabelSettings.Languages
                         .Where(x => x.Selected)
                         .Select(x => x.Code)
                         .ToList()
@@ -344,7 +344,7 @@ namespace TwitchToSpeech.ViewModel
                     return;
 
                 pipeClientCTS = new CancellationTokenSource();
-                pipeClient = new NamedPipeClientStream(".", Settings.Instance.PipeServerName, PipeDirection.Out);
+                pipeClient = new NamedPipeClientStream(".", Settings.PipeServerName, PipeDirection.Out);
                 await pipeClient.ConnectAsync(pipeClientCTS.Token).ConfigureAwait(false);
 
                 while (pipeClientCTS != null && !pipeClientCTS.IsCancellationRequested)
@@ -429,9 +429,11 @@ namespace TwitchToSpeech.ViewModel
             var culture = CultureInfo.CurrentUICulture;
             if (selectedResult != null)
             {
-                Log.Information($"Babel: {text} {string.Join(" ", result.Select(x => $"[{x.Name}:{x.Score}]"))}");
+                if (Settings.LogBabelResult)
+                    Log.Information($"Babel: {text} {string.Join(" ", result.Select(x => $"[{x.Name}:{x.Score}]"))}");
+
                 // Get cached culture
-                culture = Settings.Instance.BabelSettings.Languages.First(x => x.Code == selectedResult.Name).Culture;
+                culture = Settings.BabelSettings.Languages.First(x => x.Code == selectedResult.Name).Culture;
             }
 
             var prompt = new PromptBuilder(culture);
@@ -463,8 +465,8 @@ namespace TwitchToSpeech.ViewModel
 
         private string ReplaceNickname(string userName)
         {
-            return Settings.Instance.UserNicknames != null &&
-                Settings.Instance.UserNicknames.ContainsKey(userName) ? Settings.Instance.UserNicknames[userName] : userName;
+            return Settings.UserNicknames != null &&
+                Settings.UserNicknames.ContainsKey(userName) ? Settings.UserNicknames[userName] : userName;
         }
 
         private async Task<string> GetBeatSaverSongName(string key)

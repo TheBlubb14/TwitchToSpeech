@@ -153,6 +153,8 @@ namespace TwitchToSpeech.Model
         public BabelSettings BabelSettings { get; set; }
 
         public bool ScrollChatToEnd { get; set; }
+
+        public bool LogBabelResult { get; set; }
     }
 
     public class NotificationSetting : ObservableObject

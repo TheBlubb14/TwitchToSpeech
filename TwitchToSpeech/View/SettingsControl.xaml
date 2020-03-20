@@ -114,6 +114,7 @@
                 <Expander HorizontalAlignment="Stretch" Header="Babel" Grid.Column="0" Grid.Row="6">
                     <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
                         <CheckBox Content="Dynamically switch language" IsChecked="{Binding Settings.BabelSettings.DynamicallySwitchLanguage}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
+                        <CheckBox Content="Show prediction result in log" IsChecked="{Binding Settings.LogBabelResult}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                         <ItemsControl ItemsSource="{Binding Settings.BabelSettings.Languages}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
