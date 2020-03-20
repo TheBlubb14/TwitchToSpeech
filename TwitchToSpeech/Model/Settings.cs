@@ -151,6 +151,8 @@ namespace TwitchToSpeech.Model
         public bool ReplaceBsr { get; set; }
 
         public BabelSettings BabelSettings { get; set; }
+
+        public bool ScrollChatToEnd { get; set; }
     }
 
     public class NotificationSetting : ObservableObject

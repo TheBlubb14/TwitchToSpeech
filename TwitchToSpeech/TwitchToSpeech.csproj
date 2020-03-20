@@ -64,6 +64,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Behaviors\ScrollToBehavior.cs" />
     <Compile Include="Model\ObservableCollectionSink.cs" />
     <Compile Include="Model\AttachedProperties.cs" />
     <Compile Include="Model\Settings.cs" />

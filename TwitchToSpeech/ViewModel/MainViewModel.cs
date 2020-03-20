@@ -11,6 +11,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Dynamic;
 using System.Globalization;
 using System.IO.Pipes;
 using System.Linq;
@@ -44,6 +45,7 @@ namespace TwitchToSpeech.ViewModel
         public bool IsTwitchConnected { get; set; }
         public ICommand ConnectToTwitchCommand { get; set; }
         public ICommand KeyDownCommand { get; set; }
+        public Settings Settings => Settings.Instance;
 
         public ObservableCollection<string> Logs { get; set; } = new ObservableCollection<string>();
 
@@ -309,6 +311,8 @@ namespace TwitchToSpeech.ViewModel
         {
             try
             {
+                PropertyChangedHandler.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Settings)));
+
                 if (Settings.Instance.ConnectToPipeServer)
                     Task.Run(StartPipeClient);
                 else

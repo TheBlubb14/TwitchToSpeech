@@ -40,6 +40,7 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <!--Content-->
 
@@ -125,6 +126,12 @@
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                         </ItemsControl>
+                    </StackPanel>
+                </Expander>
+
+                <Expander HorizontalAlignment="Stretch" Header="Chat" Grid.Column="0" Grid.Row="7">
+                    <StackPanel Orientation="Vertical" TextBlock.Foreground="{DynamicResource MaterialDesignBody}" Margin="24,8,24,16">
+                        <CheckBox Content="Scroll to end on new message" IsChecked="{Binding Settings.ScrollChatToEnd}" Style="{StaticResource MaterialDesignLightCheckBox}"/>
                     </StackPanel>
                 </Expander>
             </Grid>

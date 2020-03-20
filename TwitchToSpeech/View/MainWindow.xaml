@@ -10,6 +10,7 @@
         xmlns:ei="http://schemas.microsoft.com/expression/2010/interactions"
         xmlns:local="clr-namespace:TwitchToSpeech"
         xmlns:model="clr-namespace:TwitchToSpeech.Model"
+        xmlns:behaviors="clr-namespace:TwitchToSpeech.Behaviors"
         mc:Ignorable="d"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         TextElement.FontWeight="Regular"
@@ -115,6 +116,9 @@
                                 <TextBlock Text="{Binding}"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
+                        <i:Interaction.Behaviors>
+                            <behaviors:ScrollToBehavior ScrollMode="Bottom" Enabled="{Binding Settings.ScrollChatToEnd}"/>
+                        </i:Interaction.Behaviors>
                     </ListBox>
                 </Grid>
 
