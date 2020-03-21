@@ -66,7 +66,6 @@
     </ApplicationDefinition>
     <Compile Include="Behaviors\ScrollToBehavior.cs" />
     <Compile Include="Model\ObservableCollectionSink.cs" />
-    <Compile Include="Model\AttachedProperties.cs" />
     <Compile Include="Model\Settings.cs" />
     <Compile Include="ViewModel\MainViewModel.cs" />
     <Compile Include="ViewModel\SettingsViewModel.cs" />
