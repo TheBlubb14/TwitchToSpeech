@@ -50,6 +50,7 @@ namespace TwitchToSpeech.ViewModel
         public ObservableCollection<string> Logs { get; set; } = new ObservableCollection<string>();
 
         private readonly Regex bsrRegex = new Regex(@"!bsr\s([^\s]*)");
+        private readonly Regex babelRegex = new Regex(@"\p{L}");
         private readonly HttpClient httpClient = new HttpClient();
         private readonly ObservableCollection<Exception> StartupExceptions = new ObservableCollection<Exception>();
         private readonly SpeechSynthesizer speech;
@@ -436,12 +437,9 @@ namespace TwitchToSpeech.ViewModel
              {
                  try
                  {
-                     VoiceInformation voice = null;
-                     var a = SpeechSynthesizer.AllVoices.Select(x => x.Language);
-                     if (culture != null)
-                         voice = SpeechSynthesizer.AllVoices.FirstOrDefault(x => x.Language[..2] == culture.Name);
-
-                     speech.Voice = voice ?? SpeechSynthesizer.DefaultVoice;
+                     speech.Voice = culture == null
+                         ? SpeechSynthesizer.DefaultVoice
+                         : SpeechSynthesizer.AllVoices.FirstOrDefault(x => x.Language[..2] == culture.Name);
 
                      using var synth = await speech.SynthesizeTextToStreamAsync(text);
                      using var stream = synth.AsStreamForRead();
@@ -458,19 +456,23 @@ namespace TwitchToSpeech.ViewModel
         public void SpeakBabel(string userName, string message)
         {
             var text = $"{userName}: " + message;
+            CultureInfo culture = null;
 
-            // Detect written language
-            var result = babelModel.ClassifyText(message);
-            var selectedResult = result.OrderByDescending(x => x.Score).FirstOrDefault();
-
-            var culture = CultureInfo.CurrentUICulture;
-            if (selectedResult != null)
+            // Babel needs atleast one character(excluding symbols like :)
+            if (babelRegex.IsMatch(message))
             {
-                if (Settings.LogBabelResult)
-                    Log.Information($"Babel: {text} {string.Join(" ", result.Select(x => $"[{x.Name}:{x.Score}]"))}");
+                // Detect written language
+                var result = babelModel.ClassifyText(message);
+                var selectedResult = result.OrderByDescending(x => x.Score).FirstOrDefault();
 
-                // Get cached culture
-                culture = Settings.BabelSettings.Languages.First(x => x.Code == selectedResult.Name).Culture;
+                if (selectedResult != null)
+                {
+                    if (Settings.LogBabelResult)
+                        Log.Information($"Babel: {text} {string.Join(" ", result.Select(x => $"[{x.Name}:{x.Score}]"))}");
+
+                    // Get cached culture
+                    culture = Settings.BabelSettings.Languages.First(x => x.Code == selectedResult.Name).Culture;
+                }
             }
 
             Speak(text, culture);
