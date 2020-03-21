@@ -1,7 +1,7 @@
-﻿using Microsoft.Xaml.Behaviors;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Interactivity;
 using System.Windows.Media;
 
 namespace TwitchToSpeech.Behaviors

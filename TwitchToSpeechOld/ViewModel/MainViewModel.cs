@@ -1,22 +1,23 @@
-﻿using DialogueMaster.Babel;
+using DialogueMaster.Babel;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Ioc;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Dynamic;
 using System.Globalization;
-using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net.Http;
-using System.Resources;
 using System.Runtime.CompilerServices;
+using System.Speech.Synthesis;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -31,7 +32,6 @@ using TwitchLib.Client.Events;
 using TwitchLib.Client.Models;
 using TwitchToSpeech.Model;
 using TwitchToSpeech.View;
-using Windows.Media.SpeechSynthesis;
 
 namespace TwitchToSpeech.ViewModel
 {
@@ -52,10 +52,8 @@ namespace TwitchToSpeech.ViewModel
         private readonly Regex bsrRegex = new Regex(@"!bsr\s([^\s]*)");
         private readonly HttpClient httpClient = new HttpClient();
         private readonly ObservableCollection<Exception> StartupExceptions = new ObservableCollection<Exception>();
-        private readonly SpeechSynthesizer speech;
-        private readonly TaskQueue taskQueue;
-        private readonly Dispatcher dispatcher;
         private bool IsSettingsDialogOpen;
+        private SpeechSynthesizer speech;
         private TwitchAPI twitchAPI;
         private TwitchClient twitchClient;
         private NamedPipeClientStream pipeClient;
@@ -85,9 +83,9 @@ namespace TwitchToSpeech.ViewModel
                 MenuItemSettingsCommand = new RelayCommand(OpenSettings);
                 MenuItemExitCommand = new RelayCommand(Application.Current.Shutdown);
                 ConnectToTwitchCommand = new RelayCommand(ConnectToTwitch);
-                dispatcher = Dispatcher.CurrentDispatcher;
-                taskQueue = new TaskQueue();
+
                 speech = new SpeechSynthesizer();
+                // TODO: speech.SelectVoice();
             }
         }
 
@@ -189,55 +187,40 @@ namespace TwitchToSpeech.ViewModel
 
         private void FollowerService_OnNewFollowersDetected(object sender, TwitchLib.Api.Services.Events.FollowerService.OnNewFollowersDetectedArgs e)
         {
-            try
-            {
-                var followers = e.NewFollowers
-                    .Select(x => ReplaceNickname(x.FromUserName));
+            var followers = e.NewFollowers
+                .Select(x => ReplaceNickname(x.FromUserName));
 
-                var msg = string.Join(" und ", followers);
-                var msgEndIndex = msg.LastIndexOf(" und ");
+            var msg = string.Join(" und ", followers);
+            var msgEndIndex = msg.LastIndexOf(" und ");
 
-                if (msgEndIndex > 0)
-                    msg = msg.Substring(0, msgEndIndex);
+            if (msgEndIndex > 0)
+                msg = msg.Substring(0, msgEndIndex);
 
-                ShowMessage($"{msg} {(followers.Count() > 1 ? "folgen" : "folgt")} nun", Settings.NewFollowerNotification);
-            }
-            catch (Exception ex)
-            {
-                ShowError(ex);
-            }
+            ShowMessage($"{msg} {(followers.Count() > 1 ? "folgen" : "folgt")} nun", Settings.NewFollowerNotification);
         }
 
         #region Twitch Events
         private async void TwitchClient_OnMessageReceived(object sender, OnMessageReceivedArgs e)
         {
-            try
+            if (e.ChatMessage.IsMe)
+                return;
+
+            if (Settings.UserBlacklist.Contains(e.ChatMessage.Username, StringComparer.OrdinalIgnoreCase))
+                return;
+
+            if (Settings.PrefixList?.Any(x => e.ChatMessage.Message.StartsWith(x, StringComparison.OrdinalIgnoreCase)) ?? false)
+                return;
+
+            if (Settings.ReplaceBsr && bsrRegex.IsMatch(e.ChatMessage.Message))
             {
-                if (e.ChatMessage.IsMe)
-                    return;
-
-                if (Settings.UserBlacklist.Contains(e.ChatMessage.Username, StringComparer.OrdinalIgnoreCase))
-                    return;
-
-                if (Settings.PrefixList?.Any(x => e.ChatMessage.Message.StartsWith(x, StringComparison.OrdinalIgnoreCase)) ?? false)
-                    return;
-
-                if (Settings.ReplaceBsr && bsrRegex.IsMatch(e.ChatMessage.Message))
-                {
-                    var match = bsrRegex.Match(e.ChatMessage.Message);
-                    var bsrKey = match.Groups[1].Value;
-                    var song = await GetBeatSaverSongName(bsrKey);
-                    ShowMessage($"{ReplaceNickname(e.ChatMessage.Username)} wünscht sich {song}", Settings.MessageNotification);
-                }
-                else
-                {
-                    ShowChatMessage(ReplaceNickname(e.ChatMessage.Username), e.ChatMessage.Message, Settings.MessageNotification);
-                }
-
+                var match = bsrRegex.Match(e.ChatMessage.Message);
+                var bsrKey = match.Groups[1].Value;
+                var song = await GetBeatSaverSongName(bsrKey);
+                ShowMessage($"{ReplaceNickname(e.ChatMessage.Username)} w�nscht sich {song}", Settings.MessageNotification);
             }
-            catch (Exception ex)
+            else
             {
-                ShowError(ex);
+                ShowChatMessage(ReplaceNickname(e.ChatMessage.Username), e.ChatMessage.Message, Settings.MessageNotification);
             }
         }
 
@@ -430,29 +413,9 @@ namespace TwitchToSpeech.ViewModel
             StartupExceptions.Clear();
         }
 
-        public void Speak(string text, CultureInfo culture = null)
+        public void Speak(string text)
         {
-            taskQueue.EnqueueAsync(async _ =>
-             {
-                 try
-                 {
-                     VoiceInformation voice = null;
-                     var a = SpeechSynthesizer.AllVoices.Select(x => x.Language);
-                     if (culture != null)
-                         voice = SpeechSynthesizer.AllVoices.FirstOrDefault(x => x.Language[..2] == culture.Name);
-
-                     speech.Voice = voice ?? SpeechSynthesizer.DefaultVoice;
-
-                     using var synth = await speech.SynthesizeTextToStreamAsync(text);
-                     using var stream = synth.AsStreamForRead();
-                     using var player = new System.Media.SoundPlayer(stream);
-                     player.PlaySync();
-                 }
-                 catch (Exception ex)
-                 {
-                     dispatcher.Invoke(() => ShowError(ex));
-                 }
-             }, false);
+            speech.SpeakAsync(text);
         }
 
         public void SpeakBabel(string userName, string message)
@@ -473,7 +436,9 @@ namespace TwitchToSpeech.ViewModel
                 culture = Settings.BabelSettings.Languages.First(x => x.Code == selectedResult.Name).Culture;
             }
 
-            Speak(text, culture);
+            var prompt = new PromptBuilder(culture);
+            prompt.AppendText(text);
+            speech.SpeakAsync(prompt);
         }
 
         private async void OpenSettings()
