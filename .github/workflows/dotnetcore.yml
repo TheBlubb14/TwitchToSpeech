@@ -16,7 +16,7 @@ jobs:
       with:
         dotnet-version: 3.1.200
     - name: Publish with dotnet
-      run: dotnet publish -c Release -r win-x64 --self-contained -o ../output/self-contained
+      run: dotnet publish -r win-x64 -c Release /p:PublishSingleFile=true /p:PublishTrimmed=true -o ../output/self-contained
 
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
