@@ -15,7 +15,6 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net.Http;
-using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -365,7 +364,7 @@ namespace TwitchToSpeech.ViewModel
                 pipeClient = new NamedPipeClientStream(".", Settings.PipeServerName, PipeDirection.Out);
                 await pipeClient.ConnectAsync(pipeClientCTS.Token).ConfigureAwait(false);
 
-                while (pipeClientCTS != null && !pipeClientCTS.IsCancellationRequested)
+                while (pipeClientCTS?.IsCancellationRequested == false)
                 {
                     if (pipeMessages.TryDequeue(out var msg))
                     {
