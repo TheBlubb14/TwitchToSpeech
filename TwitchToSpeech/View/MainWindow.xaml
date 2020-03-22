@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:wpf="clr-namespace:MaterialDesignThemes.Wpf;assembly=MaterialDesignThemes.Wpf"
-        xmlns:local="clr-namespace:TwitchToSpeech"
+        xmlns:local="clr-namespace:TwitchToSpeech.View"
         xmlns:model="clr-namespace:TwitchToSpeech.Model"
         xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:behavior="clr-namespace:TwitchToSpeech.Behaviors"
@@ -20,13 +20,6 @@
         DataContext="{Binding Source={StaticResource Locator}, Path=Main}"
         Title="" Height="450" Width="800">
 
-    <Window.Resources>
-        <ResourceDictionary>
-            <BooleanToVisibilityConverter x:Key="Bool2Vis"/>
-            <materialDesign:BooleanToVisibilityConverter x:Key="Bool2VisInverted" TrueValue="Hidden" FalseValue="Visible"/>
-        </ResourceDictionary>
-    </Window.Resources>
-
     <behaviors:Interaction.Triggers>
         <behaviors:EventTrigger EventName="Loaded">
             <behaviors:InvokeCommandAction Command="{Binding LoadedCommand}"/>
@@ -39,89 +32,95 @@
         </behaviors:EventTrigger>
     </behaviors:Interaction.Triggers>
 
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+    <wpf:DrawerHost x:Name="drawerHost" IsLeftDrawerOpen="{Binding IsChecked, ElementName=MenuToggleButton}">
+        <wpf:DrawerHost.LeftDrawerContent>
+            <DockPanel MinWidth="212">
+                <ToggleButton Style="{StaticResource MaterialDesignHamburgerToggleButton}"
+                              DockPanel.Dock="Top"
+                              HorizontalAlignment="Right" Margin="16"
+                              IsChecked="{Binding IsChecked, ElementName=MenuToggleButton, Mode=TwoWay}" />
+                <ScrollViewer VerticalScrollBarVisibility="Hidden">
+                    <ItemsControl x:Name="MenuItemsControl"
+                                  ItemsSource="{Binding Menu}">
+                        <ItemsControl.ItemTemplate>
+                            
+                            <!--Start: Menu group-->
+                            <DataTemplate DataType="{x:Type model:MenuGroup}">
+                                <Expander Header="{Binding Name}"
+                                          Background="Transparent"
+                                          HorizontalAlignment="Stretch">
+                                    <ItemsControl ItemsSource="{Binding Items}" Margin="16 .5 16 0">
+                                        <ItemsControl.ItemTemplate>
+                                            
+                                            <!--Start: Menu item-->
+                                            <DataTemplate DataType="{x:Type model:MenuItem}">
+                                                <Button HorizontalContentAlignment="Left"
+                                                        Style="{StaticResource MaterialDesignFlatButton}"
+                                                        Foreground="{DynamicResource PrimaryHueDarkForegroundBrush}"
+                                                        Command="{Binding DataContext.MenuClickedCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                        CommandParameter="{Binding Content}">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <materialDesign:PackIcon Margin="0 .5 4 0" Kind="{Binding Icon}" />
+                                                        <TextBlock Text="{Binding Name}"/>
+                                                    </StackPanel>
+                                                    <behaviors:Interaction.Triggers>
+                                                        <behaviors:EventTrigger EventName="Click">
+                                                            <behaviors:ChangePropertyAction TargetObject="{Binding ElementName=MenuToggleButton}" PropertyName="IsChecked" Value="False"/>
+                                                        </behaviors:EventTrigger>
+                                                    </behaviors:Interaction.Triggers>
+                                                </Button>
+                                            </DataTemplate>
+                                            <!--End: Menu item-->
 
-        <wpf:ColorZone 
-            wpf:ShadowAssist.ShadowDepth="Depth2"
-            Mode="Dark" 
-            VerticalAlignment="Stretch"
-            Grid.Column="0" 
-            Grid.ColumnSpan="2" 
-            Grid.Row="0"
-            Padding="16">
-            <!--Controls app bar-->
-            <DockPanel>
-                <materialDesign:PopupBox
-                    DockPanel.Dock="Right"
-                    PlacementMode="BottomAndAlignRightEdges"
-                    StaysOpen="False">
-                    <StackPanel>
-                        <MenuItem Header="Settings" InputGestureText="Ctrl+X" Command="{Binding MenuItemSettingsCommand}">
-                            <MenuItem.Icon>
-                                <wpf:PackIcon Opacity=".5" Kind="Settings"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                        <MenuItem Header="Exit" InputGestureText="Ctrl+E" Command="{Binding MenuItemExitCommand}">
-                            <MenuItem.Icon>
-                                <wpf:PackIcon Opacity=".5" Kind="ExitToApp"/>
-                            </MenuItem.Icon>
-                        </MenuItem>
-                    </StackPanel>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Expander>
+                            </DataTemplate>
+                            <!--End: Menu group-->
 
-                </materialDesign:PopupBox>
-                <TextBlock Text="Twitch To Speech" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center">
-                    <TextBlock.InputBindings>
-                        <MouseBinding MouseAction="LeftClick" Command="{Binding TitleClickedCommand}"/>
-                    </TextBlock.InputBindings>
-                </TextBlock>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
             </DockPanel>
-        </wpf:ColorZone>
-
-        <wpf:DialogHost Identifier="RootDialog" Grid.Column="2" Grid.Row="1">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <!-- Main View-->
-                <Grid Grid.Column="0" Grid.Row="0" Margin="20">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition/>
-                    </Grid.ColumnDefinitions>
+        </wpf:DrawerHost.LeftDrawerContent>
+        <DockPanel>
+            <wpf:ColorZone Padding="16" wpf:ShadowAssist.ShadowDepth="Depth2" Mode="PrimaryMid" DockPanel.Dock="Top">
+                <DockPanel>
+                    <ToggleButton Style="{StaticResource MaterialDesignHamburgerToggleButton}" IsChecked="False" x:Name="MenuToggleButton"/>
+                    <wpf:PopupBox DockPanel.Dock="Right" PlacementMode="BottomAndAlignRightEdges" StaysOpen="False">
+                        <StackPanel>
+                            <!--Options Buttons-->
+                            <MenuItem Header="Exit" InputGestureText="Ctrl+E" Command="{Binding MenuItemExitCommand}">
+                                <MenuItem.Icon>
+                                    <wpf:PackIcon Kind="ExitToApp" />
+                                </MenuItem.Icon>
+                            </MenuItem>
+                        </StackPanel>
+                    </wpf:PopupBox>
+                    <TextBlock Text="{Binding Title}" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock.InputBindings>
+                            <MouseBinding MouseAction="LeftClick" Command="{Binding TitleClickedCommand}"/>
+                        </TextBlock.InputBindings>
+                    </TextBlock>
+                </DockPanel>
+            </wpf:ColorZone>
+            <wpf:DialogHost Identifier="RootDialog">
+                <Grid Background="{DynamicResource PrimaryHueMidBrush}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <Button Grid.Row="0" Grid.Column="0" Content="Connect to Twitch" Command="{Binding ConnectToTwitchCommand}" Visibility="{Binding IsTwitchConnected, Converter={StaticResource Bool2VisInverted}}"/>
-                    <ListBox Grid.Row="0" Grid.Column="0" Grid.RowSpan="99" ItemsSource="{Binding Logs}"
-                             Visibility="{Binding IsTwitchConnected, Converter={StaticResource Bool2Vis}}"
-                             ScrollViewer.VerticalScrollBarVisibility="Auto"
-                             ScrollViewer.HorizontalScrollBarVisibility="Auto">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <TextBlock Text="{Binding}"/>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                        <behaviors:Interaction.Behaviors>
-                            <behavior:ScrollToBehavior ScrollMode="Bottom" Enabled="{Binding Settings.ScrollChatToEnd}"/>
-                        </behaviors:Interaction.Behaviors>
-                    </ListBox>
-                </Grid>
+                    <!--Here is the main view-->
 
-                <wpf:Snackbar MessageQueue="{wpf:MessageQueue}" x:Name="MainSnackbar" Grid.Row="1" Grid.Column="0"/>
-            </Grid>
-        </wpf:DialogHost>
-    </Grid>
+                    <ContentControl Grid.Row="0"
+                                    Grid.RowSpan="2"
+                                    VerticalAlignment="Stretch"
+                                    Content="{Binding CurrentView}"/>
+
+                    <wpf:Snackbar MessageQueue="{wpf:MessageQueue}" x:Name="MainSnackbar" Grid.Row="1" />
+                </Grid>
+            </wpf:DialogHost>
+        </DockPanel>
+    </wpf:DrawerHost>
 </Window>

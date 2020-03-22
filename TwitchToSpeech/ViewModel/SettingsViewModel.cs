@@ -1,4 +1,5 @@
-﻿using GalaSoft.MvvmLight;
+﻿using CommonServiceLocator;
+using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using Newtonsoft.Json;
 using System.Diagnostics;
@@ -9,8 +10,6 @@ namespace TwitchToSpeech.ViewModel
 {
     public class SettingsViewModel : ViewModelBase
     {
-        public ICommand LoadedCommand { get; set; }
-
         public ICommand OpenOAuthWebsiteCommand { get; set; }
 
         public Settings Settings { get; set; }
@@ -19,15 +18,9 @@ namespace TwitchToSpeech.ViewModel
         {
             if (!IsInDesignMode)
             {
-                LoadedCommand = new RelayCommand(Loaded);
                 OpenOAuthWebsiteCommand = new RelayCommand(OpenOAuthWebsite);
+                Settings = ServiceLocator.Current.GetInstance<Settings>();
             }
-        }
-
-        private void Loaded()
-        {
-            // Make a copy of settings, so we can discard the changes if the user cancels the edit
-            this.Settings = JsonConvert.DeserializeObject<Settings>(JsonConvert.SerializeObject(Settings.Instance));
         }
 
         private void OpenOAuthWebsite()

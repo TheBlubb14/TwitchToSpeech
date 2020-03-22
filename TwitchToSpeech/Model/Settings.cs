@@ -13,7 +13,6 @@ namespace TwitchToSpeech.Model
 {
     public class Settings : ObservableObject
     {
-        public static Settings Instance = new Settings();
         public static readonly string Location;
 
         static Settings()
@@ -24,81 +23,130 @@ namespace TwitchToSpeech.Model
                 Directory.CreateDirectory(applicationPath);
 
             Location = Path.Combine(applicationPath, "settings.json");
-
-            Load();
         }
 
-        public static void Safe()
+        public static void Safe(Settings settings)
         {
-            File.WriteAllText(Location, JsonConvert.SerializeObject(Instance, Formatting.Indented));
+            File.WriteAllText(Location, JsonConvert.SerializeObject(settings, Formatting.Indented));
         }
 
-        public static void Load()
+        public static Settings Load()
         {
-            if (File.Exists(Location))
+            var settings = File.Exists(Location)
+                ? JsonConvert.DeserializeObject<Settings>(File.ReadAllText(Location))
+                : new Settings();
+
+            if (settings.SubscriberNotification is null)
+                settings.SubscriberNotification = new NotificationSetting();
+
+            if (settings.RaidNotification is null)
+                settings.RaidNotification = new NotificationSetting();
+
+            if (settings.UserJoinedNotification is null)
+                settings.UserJoinedNotification = new NotificationSetting();
+
+            if (settings.UserLeftNotification is null)
+                settings.UserLeftNotification = new NotificationSetting();
+
+            if (settings.BeingHostedNotification is null)
+                settings.BeingHostedNotification = new NotificationSetting();
+
+            if (settings.MessageNotification is null)
+                settings.MessageNotification = new NotificationSetting();
+
+            if (settings.ClientConnectedNotification is null)
+                settings.ClientConnectedNotification = new NotificationSetting();
+
+            if (settings.NewFollowerNotification is null)
+                settings.NewFollowerNotification = new NotificationSetting();
+
+            if (settings.BabelSettings is null)
             {
-                Instance = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(Location));
-
-                if (Instance.SubscriberNotification is null)
-                    Instance.SubscriberNotification = new NotificationSetting();
-
-                if (Instance.RaidNotification is null)
-                    Instance.RaidNotification = new NotificationSetting();
-
-                if (Instance.UserJoinedNotification is null)
-                    Instance.UserJoinedNotification = new NotificationSetting();
-
-                if (Instance.UserLeftNotification is null)
-                    Instance.UserLeftNotification = new NotificationSetting();
-
-                if (Instance.BeingHostedNotification is null)
-                    Instance.BeingHostedNotification = new NotificationSetting();
-
-                if (Instance.MessageNotification is null)
-                    Instance.MessageNotification = new NotificationSetting();
-
-                if (Instance.ClientConnectedNotification is null)
-                    Instance.ClientConnectedNotification = new NotificationSetting();
-
-                if (Instance.NewFollowerNotification is null)
-                    Instance.NewFollowerNotification = new NotificationSetting();
-
-                if (Instance.BabelSettings is null)
+                settings.BabelSettings = new BabelSettings()
                 {
-                    Instance.BabelSettings = new BabelSettings()
-                    {
-                        Languages = new ObservableCollection<BabelLanguage>(
-                            BabelSettings.SupportedLanguages.Select(x => new BabelLanguage(x)))
-                    };
-                }
+                    Languages = new ObservableCollection<BabelLanguage>(
+                        BabelSettings.SupportedLanguages.Select(x => new BabelLanguage(x)))
+                };
             }
+
+            return settings;
         }
 
         public Settings()
         {
-            this.PropertyChanged += Settings_PropertyChanged;
+            PropertyChanged += Settings_PropertyChanged;
         }
 
         private void Settings_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == nameof(PrefixListText))
+            switch (e.PropertyName)
             {
-                PrefixList = PrefixListText.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                case nameof(PrefixListText):
+                    PrefixList = PrefixListText.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                    break;
+
+                case nameof(UserBlacklistText):
+                    UserBlacklist = UserBlacklistText.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
+                    break;
+
+                case nameof(UserNicknamesText):
+                    UserNicknames =
+                        new Dictionary<string, string>(
+                            UserNicknamesText
+                            .Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
+                            .Select(x => x.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries))
+                            .ToDictionary(x => x[0], y => y[1]),
+                       StringComparer.OrdinalIgnoreCase);
+                    break;
+
+                // For every class we have to call this pattern
+                case nameof(SubscriberNotification):
+                    SubscriberNotification.PropertyChanged += (s, e) => Safe(this);
+                    SubscriberNotification.PropertyChanged += (s, e) => PropertyChangedHandler.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Settings)));
+                    break;
+
+                case nameof(RaidNotification):
+                    RaidNotification.PropertyChanged += (s, e) => Safe(this);
+                    RaidNotification.PropertyChanged += (s, e) => PropertyChangedHandler.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Settings)));
+                    break;
+
+                case nameof(UserJoinedNotification):
+                    UserJoinedNotification.PropertyChanged += (s, e) => Safe(this);
+                    UserJoinedNotification.PropertyChanged += (s, e) => PropertyChangedHandler.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Settings)));
+                    break;
+
+                case nameof(UserLeftNotification):
+                    UserLeftNotification.PropertyChanged += (s, e) => Safe(this);
+                    UserLeftNotification.PropertyChanged += (s, e) => PropertyChangedHandler.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Settings)));
+                    break;
+
+                case nameof(BeingHostedNotification):
+                    BeingHostedNotification.PropertyChanged += (s, e) => Safe(this);
+                    BeingHostedNotification.PropertyChanged += (s, e) => PropertyChangedHandler.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Settings)));
+                    break;
+
+                case nameof(MessageNotification):
+                    MessageNotification.PropertyChanged += (s, e) => Safe(this);
+                    MessageNotification.PropertyChanged += (s, e) => PropertyChangedHandler.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Settings)));
+                    break;
+
+                case nameof(ClientConnectedNotification):
+                    ClientConnectedNotification.PropertyChanged += (s, e) => Safe(this);
+                    ClientConnectedNotification.PropertyChanged += (s, e) => PropertyChangedHandler.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Settings)));
+                    break;
+
+                case nameof(NewFollowerNotification):
+                    NewFollowerNotification.PropertyChanged += (s, e) => Safe(this);
+                    NewFollowerNotification.PropertyChanged += (s, e) => PropertyChangedHandler.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Settings)));
+                    break;
+
+                case nameof(BabelSettings):
+                    BabelSettings.PropertyChanged += (s, e) => Safe(this);
+                    BabelSettings.PropertyChanged += (s, e) => PropertyChangedHandler.Invoke(this, new System.ComponentModel.PropertyChangedEventArgs(nameof(Settings)));
+                    break;
             }
-            else if (e.PropertyName == nameof(UserBlacklistText))
-            {
-                UserBlacklist = UserBlacklistText.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries);
-            }
-            else if (e.PropertyName == nameof(UserNicknamesText))
-            {
-                UserNicknames =
-                    new Dictionary<string, string>(
-                        UserNicknamesText
-                        .Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries)
-                        .Select(x => x.Split(new[] { ':' }, StringSplitOptions.RemoveEmptyEntries))
-                        .ToDictionary(x => x[0], y => y[1]),
-                   StringComparer.OrdinalIgnoreCase);
-            }
+
+            Safe(this);
         }
 
         [JsonIgnore]
