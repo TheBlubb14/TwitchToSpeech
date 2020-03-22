@@ -1,4 +1,5 @@
-﻿using GalaSoft.MvvmLight;
+﻿using CommonServiceLocator;
+using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
 using MaterialDesignThemes.Wpf;
 using Serilog;
@@ -116,6 +117,7 @@ namespace TwitchToSpeech.ViewModel
             try
             {
                 // TODO: Dispose all controls
+                ServiceLocator.Current.GetInstance<CockpitViewModel>()?.Dispose();
             }
             catch (Exception)
             {
