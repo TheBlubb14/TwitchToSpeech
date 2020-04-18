@@ -5,17 +5,21 @@ using GalaSoft.MvvmLight.Command;
 using GalaSoft.MvvmLight.Ioc;
 using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Serilog;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -52,7 +56,7 @@ namespace TwitchToSpeech.ViewModel
         private TwitchClient twitchClient;
         private NamedPipeClientStream pipeClient;
         private CancellationTokenSource pipeClientCTS;
-        private ConcurrentQueue<string> pipeMessages = new ConcurrentQueue<string>();
+        private readonly ConcurrentQueue<string> pipeMessages = new ConcurrentQueue<string>();
         private FollowerService followerService;
         private BabelModel babelModel;
         public readonly Serilog.ILogger logger;
@@ -69,6 +73,8 @@ namespace TwitchToSpeech.ViewModel
                     .WriteTo.Logger(Log.Logger)
                     .WriteTo.ObservableCollection(Logs, Dispatcher.CurrentDispatcher)
                     .CreateLogger();
+
+                httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(new ProductHeaderValue("TwitchToSpeech", Assembly.GetExecutingAssembly().GetName().Version.ToString())));
 
                 ConnectToTwitchCommand = new RelayCommand(ConnectToTwitch);
                 dispatcher = Dispatcher.CurrentDispatcher;
@@ -120,6 +126,7 @@ namespace TwitchToSpeech.ViewModel
                 twitchAPI = new TwitchAPI(loggerfactory);
                 twitchAPI.Settings.ClientId = Settings.ClientId;
                 twitchAPI.Settings.AccessToken = Settings.AccessToken;
+                twitchAPI.Settings.Secret = Settings.OAuthToken;
                 twitchClient = new TwitchClient(logger: loggerfactory.CreateLogger<TwitchClient>());
                 twitchClient.OnConnected += TwitchClient_OnConnected;
                 twitchClient.OnNewSubscriber += TwitchClient_OnNewSubscriber;
@@ -148,6 +155,22 @@ namespace TwitchToSpeech.ViewModel
                 mainViewModel.ShowError(ex);
             }
         }
+
+        //private async Task Test()
+        //{
+        //    HttpClient c = new HttpClient();
+        //    c.DefaultRequestHeaders.Clear();
+        //    c.DefaultRequestHeaders.Add("Client-ID", "qk106nm7abo4fb5843388jnfsf4oml");
+        //    c.DefaultRequestHeaders.Add("Accept", "application/vnd.twitchtv.v5+json");
+        //    var w = Stopwatch.StartNew();
+        //    var aall = await c.GetStringAsync("https://api.twitch.tv/kraken/chat/emoticons");
+        //    dynamic a = JsonConvert.DeserializeObject(aall);
+        //    var b = JsonConvert.SerializeObject(a, Formatting.Indented);
+        //    w.Stop();
+        //    File.WriteAllText("twitchemojis-zeit.txt", TimeSpan.FromMilliseconds(w.ElapsedMilliseconds).TotalSeconds.ToString());
+        //    File.WriteAllText("twitchemojis-formated.txt", b);
+        //    ;
+        //}
 
         private void FollowerService_OnNewFollowersDetected(object sender, TwitchLib.Api.Services.Events.FollowerService.OnNewFollowersDetectedArgs e)
         {
