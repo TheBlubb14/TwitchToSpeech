@@ -1,4 +1,5 @@
-﻿using CommonServiceLocator;
+﻿using BeatSaverSharp;
+using CommonServiceLocator;
 using DialogueMaster.Babel;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Command;
@@ -48,7 +49,6 @@ namespace TwitchToSpeech.ViewModel
 
         private readonly Regex bsrRegex = new Regex(@"!bsr\s([^\s]*)");
         private readonly Regex babelRegex = new Regex(@"\p{L}");
-        private readonly HttpClient httpClient = new HttpClient();
         private readonly SpeechSynthesizer speech;
         private readonly TaskQueue taskQueue;
         private readonly Dispatcher dispatcher;
@@ -60,6 +60,7 @@ namespace TwitchToSpeech.ViewModel
         private FollowerService followerService;
         private BabelModel babelModel;
         public readonly Serilog.ILogger logger;
+        private readonly BeatSaver beatSaver;
 
         public CockpitViewModel()
         {
@@ -74,7 +75,12 @@ namespace TwitchToSpeech.ViewModel
                     .WriteTo.ObservableCollection(Logs, Dispatcher.CurrentDispatcher)
                     .CreateLogger();
 
-                httpClient.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue(new ProductHeaderValue("TwitchToSpeech", Assembly.GetExecutingAssembly().GetName().Version.ToString())));
+                beatSaver = new BeatSaver(new HttpOptions()
+                {
+                    ApplicationName = "TwitchToSpeech",
+                    Version = Assembly.GetExecutingAssembly().GetName().Version,
+                    HandleRateLimits = true
+                });
 
                 ConnectToTwitchCommand = new RelayCommand(ConnectToTwitch);
                 dispatcher = Dispatcher.CurrentDispatcher;
@@ -160,7 +166,7 @@ namespace TwitchToSpeech.ViewModel
         //{
         //    HttpClient c = new HttpClient();
         //    c.DefaultRequestHeaders.Clear();
-        //    c.DefaultRequestHeaders.Add("Client-ID", "qk106nm7abo4fb5843388jnfsf4oml");
+        //    c.DefaultRequestHeaders.Add("Client-ID", "TWITCH-CLIENT-ID");
         //    c.DefaultRequestHeaders.Add("Accept", "application/vnd.twitchtv.v5+json");
         //    var w = Stopwatch.StartNew();
         //    var aall = await c.GetStringAsync("https://api.twitch.tv/kraken/chat/emoticons");
@@ -399,9 +405,8 @@ namespace TwitchToSpeech.ViewModel
         {
             try
             {
-                var details = await httpClient.GetStringAsync($"https://beatsaver.com/api/maps/detail/{key}");
-                var deserialized = JObject.Parse(details);
-                return deserialized.SelectToken("metadata").Value<string>("songName");
+                var beatmap = await beatSaver.Key(key);
+                return beatmap.Name;
             }
             catch (Exception ex)
             {
